@@ -1,100 +1,168 @@
 import { useState, useCallback } from 'react';
-import { MapContainer, TileLayer, Popup, Marker } from 'react-leaflet';
-import { useMapEvent } from 'react-leaflet';
+import { MapContainer, TileLayer, useMapEvents, useMap, Popup, Marker} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import Geocode from 'react-geocode';
 
-const LocationPicker = ({ selectedLocation }) => {
+const LocationPicker = ({ onLocationSelect, selectedLocation }) => {
+  const map = useMapEvents({
+      click(e) {
+          const { lat, lng } = e.latlng;
+          onLocationSelect({ lat, lng });
+      },
+  });
+
   return selectedLocation ? (
-    <Popup position={selectedLocation}>
-      <div>
-        <p>Selected Location:</p>
-        <p>Latitude: {selectedLocation.lat.toFixed(3)}</p>
-        <p>Longitude: {selectedLocation.lng.toFixed(3)}</p>
-      </div>
-    </Popup>
+      <Popup position={selectedLocation}>
+          <div>
+              <p>Selected Location:</p>
+              <p>Latitude: {selectedLocation.lat.toFixed(3)}</p>
+              <p>Longitude: {selectedLocation.lng.toFixed(3)}</p>
+          </div>
+      </Popup>
   ) : null;
 };
 
-const MapComponent = ({ center, selectedLocation, setSelectedLocation }) => {
-  const map = useMapEvent('click', (e) => {
-    setSelectedLocation(e.latlng);
-  });
+const UpdateMapView = ({ center }) => {
+    const map = useMap();
+    map.flyTo(center, map.getZoom());
 
+    return null;
+};
+
+const MapComponent = ({ center, onLocationSelect, selectedLocation }) => {
   return (
-    <MapContainer center={center} zoom={15} scrollWheelZoom={true} className="h-40 w-full rounded-lg">
-      <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      <LocationPicker selectedLocation={selectedLocation} />
-      {selectedLocation && <Marker position={[selectedLocation.lat, selectedLocation.lng]} />}
-    </MapContainer>
+      <MapContainer center={center} zoom={13} scrollWheelZoom={true} className="h-40 w-full rounded-lg">
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <LocationPicker onLocationSelect={onLocationSelect} />
+          <UpdateMapView center={center} />
+          {selectedLocation && (
+              <>
+                  <Marker position={[selectedLocation.lat, selectedLocation.lng]}>
+                      <Popup>
+                          <div>
+                              <h2>Selected Location</h2>
+                              <p>Latitude: {selectedLocation.lat.toFixed(4)}, Longitude: {selectedLocation.lng.toFixed(4)}</p>
+                          </div>
+                      </Popup>
+                  </Marker>
+              </>
+          )}
+      </MapContainer>
   );
 };
 
-const InputWithLabel = ({ label, value }) => (
-  <div className="flex items-center space-x-3">
-    <label className="block text-sm font-medium w-1/3">{label}</label>
-    <div className="mt-1 block w-2/3 p-2 border border-gray-300 rounded-lg">{value}</div>
-  </div>
-);
 
-const WindEnergyPage = () => {
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const [address, setAddress] = useState('');
-  const [error, setError] = useState('');
 
-  const handleAddressChange = useCallback((e) => {
-    setAddress(e.target.value);
-  }, []);
-
-  const handleAddressSubmit = useCallback(async () => {
-    try {
-      const response = await Geocode.fromAddress(address);
-      const { lat, lng } = response.results[0].geometry.location;
-      setSelectedLocation({ lat, lng });
-      setError('');
-    } catch (err) {
-      setError('Address not found');
-    }
-  }, [address]);
-
-  return (
-    <div className="h-screen p-6 overflow-auto transition duration-500 ease-in-out">
-      <div className="max-w-md mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-xl font-semibold">Wind Energy Calculator</h1>
-          <button className="transition duration-500 ease-in-out"></button>
-        </div>
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold mb-4">Location</h2>
-          <MapComponent
-            center={[selectedLocation?.lat || 50.671, selectedLocation?.lng || -120.332]}
-            selectedLocation={selectedLocation}
-            setSelectedLocation={setSelectedLocation}
+const InputWithLabel = ({ label, id, value, onChange, error }) => (
+  <>
+      <div className="flex items-center space-x-3">
+          <label htmlFor={id} className="block text-sm font-medium w-1/3">
+              {label}
+          </label>
+          <input
+              type="text"
+              id={id}
+              value={value}
+              onChange={onChange}
+              className="mt-1 block w-2/3 p-2 border border-gray-300 rounded-lg"
           />
-          <div className="flex flex-col space-y-4">
-            <InputWithLabel label="Latitude (N)" value={selectedLocation ? selectedLocation.lat.toFixed(3) : ''} />
-            <InputWithLabel label="Longitude (E)" value={selectedLocation ? selectedLocation.lng.toFixed(3) : ''} />
-            <div className="flex items-center space-x-3">
-              <label className="block text-sm font-medium w-1/3">Address</label>
-              <input
-                type="text"
-                value={address}
-                onChange={handleAddressChange}
-                className="mt-1 block w-2/3 p-2 border border-gray-300 rounded-lg"
-              />
-            </div>
-            {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-            <button
-              onClick={handleAddressSubmit}
-              className="w-full py-2 px-4 rounded-lg font-bold mt-6 bg-blue-500 hover:bg-blue-400 transition duration-500 ease-in-out text-white"
-            >
-              Submit Address
-            </button>
-          </div>
-        </section>
       </div>
-    </div>
-  );
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+  </>
+);
+const WindEnergyPage = () => {
+    
+    const [location, setLocation] = useState({ lat: 50.671, lng: -120.332 });
+    const [error, setError] = useState('');
+    const [analysisPeriod, setAnalysisPeriod] = useState('');
+    const [interestRate, setInterestRate] = useState('');
+    const [costOfEnergy, setCostOfEnergy] = useState('');
+    const [systemCapacity, setSystemCapacity] = useState('');
+    const [rotorDiameter, setRotorDiameter] = useState('');
+
+    const handleLocationSelect = useCallback(newLocation => {
+        setLocation(newLocation);
+        setError(''); // Clear any existing errors
+    }, []);
+
+    const handleInputChange = useCallback(e => {
+        const { id, value } = e.target;
+        if (id === 'lat' || id === 'lng') {
+          if (value.trim() !== '') {
+              setLocation(prev => ({ ...prev, [id]: parseFloat(value) }));
+          }
+          // Do not set to 0 or any default value if empty, just ignore the change.
+          } else {
+              // Handle other inputs based on their ID.
+              switch (id) {
+                  case 'analysisPeriod':
+                      setAnalysisPeriod(value);
+                      break;
+                  case 'interestRate':
+                      setInterestRate(value);
+                      break;
+                  case 'costOfEnergy':
+                      setCostOfEnergy(value);
+                      break;
+                  case 'systemCapacity':
+                      setSystemCapacity(value);
+                      break;
+                  case 'rotorDiameter':
+                      setRotorDiameter(value);
+                      break;
+                  default:
+                      break;
+              }
+          }
+      }
+      // If the field is cleared, do not update its corresponding state.
+      // This keeps the display and internal state consistent with previous valid inputs.
+  , []);
+
+    
+    
+    return (
+        <div className="h-screen p-6 overflow-auto transition duration-500 ease-in-out">
+            <div className="max-w-md mx-auto">
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-xl font-semibold">Wind Energy Calculator</h1>
+                    <button className="transition duration-500 ease-in-out">
+                    </button>
+                </div>
+                <section className="mb-6">
+                    <h2 className="text-xl font-semibold mb-4">Location</h2>
+                    <MapComponent center={[location.lat, location.lng]} onLocationSelect={handleLocationSelect} selectedLocation={location} />
+
+                    <InputWithLabel label="Latitude (N)" id="lat" value={location.lat.toString()} onChange={handleInputChange} error={error} />
+                    <InputWithLabel label="Longitude (E)" id="lng" value={location.lng.toString()} onChange={handleInputChange} error={error} />
+                </section>
+
+                {/* Financial Parameters Section */}
+                <section className="mb-6">
+                    <h2 className="text-xl font-semibold mb-4">Financial Parameters</h2>
+                    <div className="flex flex-col space-y-4">
+                        <InputWithLabel label="Analysis Period (yrs)" id="analysisPeriod" value={analysisPeriod}  onChange={(handleInputChange)} />
+                        <InputWithLabel label="Interest (%)" id="interestRate" value={interestRate} onChange={(handleInputChange)} />
+                        <InputWithLabel label="Cost of energy ($/kWh)" id="costOfEnergy" value={costOfEnergy} onChange={(handleInputChange)} />
+                    </div>
+                </section>
+                {/* Farm Parameters Section */}
+                <section className="mb-6">
+                    <h2 className="text-xl font-semibold mb-4">Farm Parameters</h2>
+                    <div className="flex flex-col space-y-4">
+                        <InputWithLabel label="System Capacity (kW)" id="systemCapacity" value={systemCapacity} onChange={(handleInputChange)}  />
+                        <InputWithLabel label="Rotor Diameter (m)" id="rotorDiameter" value={rotorDiameter} onChange={(handleInputChange)} />
+                    </div>
+                </section>
+
+                <button
+                    className="w-full py-2 px-4 rounded-lg font-bold mt-6 bg-blue-500 hover:bg-blue-400 transition duration-500 ease-in-out text-white"
+                    disabled={!!error}
+                >
+                    Simulate
+                </button>
+            </div>
+        </div>
+    );
 };
 
 export default WindEnergyPage;
