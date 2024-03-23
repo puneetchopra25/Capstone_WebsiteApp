@@ -52,32 +52,37 @@ const MapComponent = ({ center, onLocationSelect, selectedLocation }) => {
 
 
 
-const InputWithLabel = ({ label, id, value, onChange, darkMode, error }) => (
-    <>
-        <div className={`flex items-center space-x-3 ${darkMode ? 'text-white' : 'text-gray-700'}`}>
-            <label htmlFor={id} className="block text-sm font-medium w-1/3">
-                {label}
-            </label>
-            <input
-                type="text"
-                id={id}
-                value={value}
-                onChange={onChange}
-                className={`mt-1 block w-2/3 p-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg`}
-            />
-        </div>
-        {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-    </>
+const InputWithLabel = ({ label, id, value, onChange, error }) => (
+  <>
+      <div className="flex items-center space-x-3">
+          <label htmlFor={id} className="block text-sm font-medium w-1/3">
+              {label}
+          </label>
+          <input
+              type="text"
+              id={id}
+              value={value}
+              onChange={onChange}
+              className="mt-1 block w-2/3 p-2 border border-gray-300 rounded-lg"
+          />
+      </div>
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+  </>
 );
-
 const SolarEnergyPage = () => {
-    const [darkMode, setDarkMode] = useState(false);
+    
     const [location, setLocation] = useState({ lat: 50.671, lng: -120.332 });
     const [error, setError] = useState('');
+    const [analysisPeriod, setAnalysisPeriod] = useState('');
+    const [interestRate, setInterestRate] = useState('');
+    const [costOfEnergy, setCostOfEnergy] = useState('');
+    const [systemCapacity, setSystemCapacity] = useState('');
+    const [] = useState('');
+    const [] = useState('');
+    const [] = useState('');
+    const [] = useState('');
 
-    const toggleDarkMode = useCallback(() => {
-        setDarkMode(!darkMode);
-    }, [darkMode]);
+
 
     const handleLocationSelect = useCallback(newLocation => {
         setLocation(newLocation);
@@ -87,15 +92,33 @@ const SolarEnergyPage = () => {
     const handleInputChange = useCallback(e => {
         const { id, value } = e.target;
         setLocation(prev => ({ ...prev, [id]: parseFloat(value) }));
+        switch (id) {
+          case 'analysisPeriod':
+            setAnalysisPeriod(value);
+            break;
+          case 'interestRate':
+            setInterestRate(value);
+            break;
+          // Add cases for other inputs as necessary
+          case 'costOfEnergy':
+            setCostOfEnergy(value);
+            break;
+          case 'systemCapacity':
+            setSystemCapacity(value);
+            break;
+          default:
+            break;
+        }
     }, []);
 
+    
+    
     return (
-        <div className={`${darkMode ? 'bg-gray-900' : 'bg-white'} ${darkMode ? 'text-white' : 'text-gray-900'} h-screen p-6 overflow-auto transition duration-500 ease-in-out`}>
+        <div className="h-screen p-6 overflow-auto transition duration-500 ease-in-out">
             <div className="max-w-md mx-auto">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-xl font-semibold">Solar Energy Calculator</h1>
-                    <button onClick={toggleDarkMode} className={`p-2 rounded-full ${darkMode ? 'bg-white' : 'bg-gray-900'} ${darkMode ? 'text-gray-900' : 'text-white'} transition duration-500 ease-in-out`}>
-                        {darkMode ? 'Light Mode' : 'Dark Mode'}
+                    <button className="transition duration-500 ease-in-out">
                     </button>
                 </div>
 
@@ -103,33 +126,33 @@ const SolarEnergyPage = () => {
                     <h2 className="text-xl font-semibold mb-4">Location</h2>
                     <MapComponent center={[location.lat, location.lng]} onLocationSelect={handleLocationSelect} selectedLocation={location} />
 
-                    <InputWithLabel label="Latitude (°N)" id="lat" value={location.lat.toString()} onChange={handleInputChange} darkMode={darkMode} error={error} />
-                    <InputWithLabel label="Longitude (°E)" id="lng" value={location.lng.toString()} onChange={handleInputChange} darkMode={darkMode} error={error} />
+                    <InputWithLabel label="Latitude (N)" id="lat" value={location.lat.toString()} onChange={handleInputChange} error={error} />
+                    <InputWithLabel label="Longitude (E)" id="lng" value={location.lng.toString()} onChange={handleInputChange} error={error} />
                 </section>
 
                 {/* Financial Parameters Section */}
                 <section className="mb-6">
                     <h2 className="text-xl font-semibold mb-4">Financial Parameters</h2>
                     <div className="flex flex-col space-y-4">
-                        <InputWithLabel label="Analysis Period (yrs)" id="analysisPeriod" value="" onChange={() => {}} darkMode={darkMode} />
-                        <InputWithLabel label="Interest (%)" id="interestRate" value="" onChange={() => {}} darkMode={darkMode} />
-                        <InputWithLabel label="Cost of energy ($/kWh)" id="costOfEnergy" value="" onChange={() => {}} darkMode={darkMode} />
+                        <InputWithLabel label="Analysis Period (yrs)" id="analysisPeriod" value={analysisPeriod}  onChange={(handleInputChange)} />
+                        <InputWithLabel label="Interest (%)" id="interestRate" value={interestRate} onChange={(handleInputChange)} />
+                        <InputWithLabel label="Cost of energy ($/kWh)" id="costOfEnergy" value={costOfEnergy} onChange={(handleInputChange)} />
                     </div>
                 </section>
                 {/* Farm Parameters Section */}
                 <section className="mb-6">
                     <h2 className="text-xl font-semibold mb-4">Farm Parameters</h2>
                     <div className="flex flex-col space-y-4">
-                        <InputWithLabel label="System Capacity (kW)" id="systemCapacity" value="" onChange={() => {}} darkMode={darkMode} />
-                        <InputWithLabel label="Film Type" id="filmType" value="" onChange={() => {}} darkMode={darkMode} />
-                        <InputWithLabel label="Azimuth (°)" id="azimuth" value="" onChange={() => {}} darkMode={darkMode} />
-                        <InputWithLabel label="Tilt (°)" id="tilt" value="" onChange={() => {}} darkMode={darkMode} />
-                        <InputWithLabel label="Losses (%)" id="losses" value="" onChange={() => {}} darkMode={darkMode} />
+                        <InputWithLabel label="System Capacity (kW)" id="systemCapacity" value={systemCapacity} onChange={(handleInputChange)}  />
+                        <InputWithLabel label="Film Type" id="filmType" value="" onChange={() => {}}  />
+                        <InputWithLabel label="Azimuth (째)" id="azimuth" value="" onChange={() => {}}  />
+                        <InputWithLabel label="Tilt (째)" id="tilt" value="" onChange={() => {}}  />
+                        <InputWithLabel label="Losses (%)" id="losses" value="" onChange={() => {}} />
                     </div>
                 </section>
 
                 <button
-                    className={`w-full py-2 px-4 rounded-lg font-bold mt-6 ${darkMode ? 'bg-blue-500 hover:bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'} transition duration-500 ease-in-out`}
+                    className="w-full py-2 px-4 rounded-lg font-bold mt-6 bg-blue-500 hover:bg-blue-400 transition duration-500 ease-in-out"
                     disabled={!!error}
                 >
                     Simulate

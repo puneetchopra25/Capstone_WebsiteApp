@@ -1,76 +1,97 @@
-import { useState } from 'react';
-const WindEnergyPage = () => {
-  const [latitude, setLatitude] = useState('50.6761'); // default latitude
-  const [longitude, setLongitude] = useState('-120.340836'); // default longitude
+import { useState, useCallback } from 'react';
+import { MapContainer, TileLayer, Popup, Marker } from 'react-leaflet';
+import { useMapEvent } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import Geocode from 'react-geocode';
 
-  const handleLatitudeChange = (event) => {
-    setLatitude(event.target.value);
-  };
+const LocationPicker = ({ selectedLocation }) => {
+  return selectedLocation ? (
+    <Popup position={selectedLocation}>
+      <div>
+        <p>Selected Location:</p>
+        <p>Latitude: {selectedLocation.lat.toFixed(3)}</p>
+        <p>Longitude: {selectedLocation.lng.toFixed(3)}</p>
+      </div>
+    </Popup>
+  ) : null;
+};
 
-  const handleLongitudeChange = (event) => {
-    setLongitude(event.target.value);
-  };
-
-  const handleSimulate = () => {
-    // Handle the simulation logic here
-    console.log(`Simulating for Latitude: ${latitude}, Longitude: ${longitude}`);
-  };
+const MapComponent = ({ center, selectedLocation, setSelectedLocation }) => {
+  const map = useMapEvent('click', (e) => {
+    setSelectedLocation(e.latlng);
+  });
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100 text-white p-2 justify-between">
-      <div className="bg-blue-600 p-2 mb-8 rounded">
-        <nav className="flex justify-around">
-          <button className="px-3 py-1 bg-blue-700 rounded">Location</button>
-          <button className="px-3 py-1 hover:bg-blue-700 rounded">System Model</button>
-          <button className="px-3 py-1 hover:bg-blue-700 rounded">Financial Model</button>
-        </nav>
-      </div>      
-      <div>
-        <div className="mb-4">
-          <label htmlFor="latitude" className="block text-sm font-medium text-black">
-            Latitude
-          </label>
-          <div className="flex mt-1">
-            <input
-              type="text"
-              id="latitude"
-              value={latitude}
-              onChange={handleLatitudeChange}
-              className="block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-l-md shadow-sm focus:outline-none focus:ring focus:border-blue-500 sm:text-sm"
-              placeholder="Enter latitude"
-            />
-            <span className="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-600 bg-gray-700 text-white text-sm">
-              °N
-            </span>
-          </div>
+    <MapContainer center={center} zoom={15} scrollWheelZoom={true} className="h-40 w-full rounded-lg">
+      <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <LocationPicker selectedLocation={selectedLocation} />
+      {selectedLocation && <Marker position={[selectedLocation.lat, selectedLocation.lng]} />}
+    </MapContainer>
+  );
+};
+
+const InputWithLabel = ({ label, value }) => (
+  <div className="flex items-center space-x-3">
+    <label className="block text-sm font-medium w-1/3">{label}</label>
+    <div className="mt-1 block w-2/3 p-2 border border-gray-300 rounded-lg">{value}</div>
+  </div>
+);
+
+const WindEnergyPage = () => {
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [address, setAddress] = useState('');
+  const [error, setError] = useState('');
+
+  const handleAddressChange = useCallback((e) => {
+    setAddress(e.target.value);
+  }, []);
+
+  const handleAddressSubmit = useCallback(async () => {
+    try {
+      const response = await Geocode.fromAddress(address);
+      const { lat, lng } = response.results[0].geometry.location;
+      setSelectedLocation({ lat, lng });
+      setError('');
+    } catch (err) {
+      setError('Address not found');
+    }
+  }, [address]);
+
+  return (
+    <div className="h-screen p-6 overflow-auto transition duration-500 ease-in-out">
+      <div className="max-w-md mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-xl font-semibold">Wind Energy Calculator</h1>
+          <button className="transition duration-500 ease-in-out"></button>
         </div>
-        <div className="mb-4">
-          <label htmlFor="longitude" className="block text-sm font-medium text-black">
-            Longitude
-          </label>
-          <div className="flex mt-1">
-            <input
-              type="text"
-              id="longitude"
-              value={longitude}
-              onChange={handleLongitudeChange}
-              className="block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-l-md shadow-sm focus:outline-none focus:ring focus:border-blue-500 sm:text-sm"
-              placeholder="Enter longitude"
-            />
-            <span className="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-600 bg-gray-700 text-white text-sm">
-              °E
-            </span>
+        <section className="mb-6">
+          <h2 className="text-xl font-semibold mb-4">Location</h2>
+          <MapComponent
+            center={[selectedLocation?.lat || 50.671, selectedLocation?.lng || -120.332]}
+            selectedLocation={selectedLocation}
+            setSelectedLocation={setSelectedLocation}
+          />
+          <div className="flex flex-col space-y-4">
+            <InputWithLabel label="Latitude (N)" value={selectedLocation ? selectedLocation.lat.toFixed(3) : ''} />
+            <InputWithLabel label="Longitude (E)" value={selectedLocation ? selectedLocation.lng.toFixed(3) : ''} />
+            <div className="flex items-center space-x-3">
+              <label className="block text-sm font-medium w-1/3">Address</label>
+              <input
+                type="text"
+                value={address}
+                onChange={handleAddressChange}
+                className="mt-1 block w-2/3 p-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+            {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+            <button
+              onClick={handleAddressSubmit}
+              className="w-full py-2 px-4 rounded-lg font-bold mt-6 bg-blue-500 hover:bg-blue-400 transition duration-500 ease-in-out text-white"
+            >
+              Submit Address
+            </button>
           </div>
-        </div>
-      </div>
-      <div>
-        <button
-          type="button"
-          onClick={handleSimulate}
-          className="w-full py-2 bg-blue-600 rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:border-blue-700 focus:ring focus:ring-blue-200 disabled:opacity-25 transition"
-        >
-          Simulate
-        </button>
+        </section>
       </div>
     </div>
   );
