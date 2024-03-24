@@ -1,14 +1,16 @@
-import { Wind, Sun, Settings, LifeBuoy } from "lucide-react";
-import Sidebar, { SidebarItem } from "./components/Sidebar"
-{/*import Header from "./components/Header";*/}
-import { BrowserRouter as Router, Route, Routes} from 'react-router-dom';
+import { useState } from 'react';
+import { Wind, Sun, Settings, LifeBuoy } from 'lucide-react';
+import Sidebar, { SidebarItem } from './components/Sidebar';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
-import SolarEnergyPage from "./pages/SolarEnergyPage";
-import WindEnergyPage from "./pages/WindEnergyPage";
-import SettingsPage from "./pages/SettingsPage";
-import HelpPage from "./pages/HelpPage";
+import SolarEnergyPage from './pages/SolarEnergyPage';
+import WindEnergyPage from './pages/WindEnergyPage';
+import SettingsPage from './pages/SettingsPage';
+import HelpPage from './pages/HelpPage';
 
 const App = () => {
+  
+  const [calculatedValues, setCalculatedValues] = useState(null);
   return (
     <Router>
       <div className="flex h-screen">
@@ -25,21 +27,30 @@ const App = () => {
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/help" element={<HelpPage />} />
             </Routes>
-        </main>
+            {/* Display fetched usernames */}
+            
+            {calculatedValues && (
+              <div>
+                <p>Annual Energy: {calculatedValues.annual_energy}</p>
+                <p>Capacity Factor: {calculatedValues.capacity_factor}</p>
+              </div>
+            )}
+          </main>
         </div>
         <div className="mr-0">
-          <main className="flex-grow-0"> {/* Remove flex-grow to prevent it from taking up unnecessary space */}
+          <main className="flex-grow-0">
             <Routes>
               <Route path="/solar-energy" element={<SolarEnergyPage />} />
-              <Route path="/wind-energy" element={<WindEnergyPage />} />
+              <Route
+                path="/wind-energy"
+                element={<WindEnergyPage setCalculatedValues={setCalculatedValues} />} // Pass setUsernames prop
+              />
             </Routes>
           </main>
         </div>
-        
       </div>
-      
     </Router>
   );
-}
+};
 
 export default App;
