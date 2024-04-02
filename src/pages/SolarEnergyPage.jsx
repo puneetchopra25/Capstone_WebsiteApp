@@ -152,7 +152,7 @@ const SolarEnergyPage = () => {
                 </section>
 
                 <button
-                    className="w-full py-2 px-4 rounded-lg font-bold mt-6 bg-blue-500 hover:bg-blue-400 transition duration-500 ease-in-out"
+                    className="w-full py-2 px-4 rounded-lg font-bold mt-6 bg-blue-500 hover:bg-blue-400 transition duration-500 ease-in-out text-white"
                     disabled={!!error}
                 >
                     Simulate
