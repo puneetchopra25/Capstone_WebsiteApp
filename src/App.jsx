@@ -9,18 +9,23 @@ import WindEnergyPage from './pages/WindEnergyPage';
 import SettingsPage from './pages/SettingsPage';
 import HelpPage from './pages/HelpPage';
 import Windresultspage from './pages/Windresultspage';
-
+import SolarResultsPage from './pages/Solarresultspage';
 const App = () => {
   
   const [calculatedValues, setCalculatedValues] = useState(null);
   const [weibullPlotImage, setWeibullPlotImage] = useState('');
   const [powerCurvePlotImage, setPowerCurvePlotImage] = useState('');
   const [monthly_wind_energy,setMonthly_wind_energy] = useState('');
-  const [range_plot_wind,setRange_plot_wind] = useState('')
+  const [range_plot_wind,setRange_plot_wind] = useState('');
+  const [solarCalcValues, setSolarCalcValues] = useState(null);
+  const [solarPlotImage, setSolarPlotImage] = useState('');
   // const handleDownloadPdf = () => {
   //   // Logic to generate and download the PDF
   //   console.log('PDF download initiated');
   // };
+  const SectionDivider = () => (
+    <div className="my-6 border-t-2 border-gray-700"></div> // Creates a horizontal line as a section divider
+  );
   useEffect(() => {
     if (calculatedValues) {
       if (calculatedValues.weibull_pdf_wind_speed) {
@@ -37,17 +42,26 @@ const App = () => {
       }
     }
   }, [calculatedValues]);
+  useEffect(() => {
+    if (solarCalcValues) {
+      // Assuming you have an image plot in your solar calculations
+      if (solarCalcValues.solarPlotImage) {
+        setSolarPlotImage(solarCalcValues.solarPlotImage);
+      }
+      // ...handle other solar calculation results
+    }
+  }, [solarCalcValues]);
   return (
     <Router>
-      <div className="flex h-screen ">
+      <div className="flex h-screen">
         <Sidebar>
           <SidebarItem icon={<Sun size={20} />} text="Solar Energy" to="/solar-energy" alert />
           <SidebarItem icon={<Wind size={20} />} text="Wind Energy" to="/wind-energy" alert />
-          <hr className="my-3" />
+          <SectionDivider/>
           <SidebarItem icon={<Settings size={20} />} text="Settings" to="/settings" />
           <SidebarItem icon={<LifeBuoy size={20} />} text="Help" to="/help" />
         </Sidebar>
-        <div className="flex-grow bg-slate-300">
+        <div className="flex-grow bg-gray-300">
           <main>
             <Routes>
               <Route path="/settings" element={<SettingsPage />} />
@@ -60,13 +74,18 @@ const App = () => {
               monthly_wind_energy={monthly_wind_energy}
               range_plot_wind={range_plot_wind}
             />
+            <SolarResultsPage
+              solarCalcValues={solarCalcValues}
+              solarPlotImage={solarPlotImage}
+            />
             </main>
           </div>
           <div className="mr-0">
             <main className="flex-grow-0">
               <Routes>
-                <Route path="/solar-energy" 
-                element={<SolarEnergyPage />} 
+                <Route 
+                  path="/solar-energy" 
+                  element={<SolarEnergyPage setSolarCalcValues={setSolarCalcValues} />} 
                 />
                 <Route
                   path="/wind-energy"

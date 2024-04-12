@@ -13,11 +13,11 @@ export default function Sidebar({ children }) {
     return (
         <>
             <aside className={`h-screen ${expanded ? 'w-64' : 'w-16'} transition-width duration-300`}>
-                <nav className="h-full flex flex-col border-r shadow-sm bg-slate-200">
-                    <div className="p-4 pb-2 flex justify-between items-center">
+                <nav className="h-full flex flex-col border-r shadow-sm bg-gray-200">
+                    <div className="p-4 pb-2 flex justify-between items-center ">
                         <img src={pure_sim} className={`overflow-hidden transition-all duration-300 ${expanded ? "w-44" : "w-0"}`} alt="Logo" />
                         
-                        <button onClick={() => setExpanded((curr) => !curr)} className="p-1.5 rounded-lg bg-gray-50 hover:bg-gray-100">
+                        <button onClick={() => setExpanded((curr) => !curr)} className="p-1.5 rounded-lg bg-gray-50 hover:bg-gray-600">
                             {expanded ? <ChevronFirst size={20} /> : <ChevronLast size={20} />}
                         </button>
                     </div>
@@ -36,11 +36,11 @@ export function SidebarItem({ icon, text, to }) {
     const activeClassName = "bg-blue-500 text-white"; // Tailwind classes for active link
 
     return (
-        <li className="relative group">
+        <li className="relative group text-white">
             <NavLink
                 to={to}
                 className={({ isActive }) =>
-                    `flex items-center py-2 px-3 my-1 font-medium rounded-md cursor-pointer transition-colors ${isActive ? activeClassName : "text-gray-600 hover:bg-gray-200"}`
+                    `flex items-center py-2 px-3 my-1 font-medium rounded-md cursor-pointer transition-colors ${isActive ? activeClassName : "text-gray-600 hover:bg-gray-300"}`
                 }
             >
                 {icon}
