@@ -110,8 +110,6 @@ class WindTurbine:
         total_max_possible_energy = max_possible_energy_per_turbine * self.number_of_turbines
         capacity_factor = total_annual_energy_kWh / total_max_possible_energy
         return capacity_factor
-    
-    
         
         #check thsi later 
     def plot_power_pdf(self, wind_speeds):
@@ -207,7 +205,7 @@ class WindTurbine:
         
         
     def energy_range_production(self, windspeeds):
-        num_simulations = 5
+        num_simulations = 20
         simulated_annual_energy_outputs = []
 
         for _ in range(num_simulations):
@@ -218,7 +216,7 @@ class WindTurbine:
             
         simulated_annual_energy_outputs = np.array(simulated_annual_energy_outputs)
         mean_simulated_annual_energy = np.mean(simulated_annual_energy_outputs)
-        conf_interval = np.percentile(simulated_annual_energy_outputs, [2.5, 97.5])
+        conf_interval = np.percentile(simulated_annual_energy_outputs, [1, 99])
         
         conf_interval_formatted = f"{conf_interval[0]:,.2f} - {conf_interval[1]:,.2f} kWh"
         
@@ -246,7 +244,7 @@ class WindTurbine:
             
         plt.figure(figsize=(8, 4))
         months = range(1, 13)  # 1 to 12 for January to December
-        plt.bar(months, monthly_energies, color='skyblue')
+        plt.bar(months, monthly_energies, color='tab:blue')
         plt.xlabel('Month')
         plt.ylabel('Energy Produced (kWh)')
         plt.title('Monthly Energy Production')
@@ -263,7 +261,7 @@ class WindTurbine:
     def energy_range_plot(self, simulated_annual_energy_outputs, conf_interval):
         
         plt.figure(figsize=(8, 4))
-        plt.hist(simulated_annual_energy_outputs, bins=50, alpha=0.7, color='blue', edgecolor='black')
+        plt.hist(simulated_annual_energy_outputs, bins=50, alpha=0.7, color='tab:blue', edgecolor='black')
         # plt.axvline(mean_simulated_annual_energy, color='red', linestyle='dashed', linewidth=2)
         plt.axvline(conf_interval[0], color='green', linestyle='dashed', linewidth=2)
         plt.axvline(conf_interval[1], color='green', linestyle='dashed', linewidth=2)

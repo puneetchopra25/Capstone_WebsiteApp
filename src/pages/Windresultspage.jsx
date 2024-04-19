@@ -87,27 +87,27 @@ const Windresultspage = ({calculatedValues, weibullPlotImage, powerCurvePlotImag
                       <div className="px-6 py-4">
                         {/* Replace the following spans with your calculated values */}
                         <div className="mb-3" >
-                          <span className="text-sm font-medium text-gray-600">Annual Energy:</span>
+                          <span className="text-md font-medium text-gray-800">Annual Energy for the selected year:</span>
                           <span className="block font-semibold text-lg text-gray-800">{calculatedValues.annual_energy} kWh</span>
                         </div>
                         <div className="mb-3">
-                          <span className="text-sm font-medium text-gray-600">Capacity Factor:</span>
+                          <span className="text-md font-medium text-gray-800">Capacity Factor:</span>
                           <span className="block font-semibold text-lg text-gray-800">{calculatedValues.capacity_factor} %</span>
                         </div>
                         <div>
-                          <span className="text-sm font-medium text-gray-600">Energy Range:</span>
+                          <span className="text-md font-medium text-gray-800">Expected Energy Range:</span>
                           <span className="block font-semibold text-lg text-gray-800">{calculatedValues.Energy_Range}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Cost Details */}
-                    <div className="bg-white rounded-lg shadow-md overflow-hidden col-span-1">
+                    {/* <div className="bg-white rounded-lg shadow-md overflow-hidden col-span-1">
                       <div className="bg-gray-200 px-5 py-3">
                         <h3 className="text-lg font-semibold text-gray-800">Cost Details</h3>
                       </div>
                       <div className="px-6 py-4">
-                        {/* Replace the following spans with your cost details */}
+                         Replace the following spans with your cost details
                         <div className="mb-3">
                           <span className="text-sm font-medium text-gray-600">Cost of Installation:</span>
                           <span className="block font-semibold text-lg text-gray-800">2,000,000$-4,000,000$</span>
@@ -123,17 +123,13 @@ const Windresultspage = ({calculatedValues, weibullPlotImage, powerCurvePlotImag
                         {/* <div>
                           <span className="text-sm font-medium text-gray-600">Incremental Cost:</span>
                           <span className="block font-semibold text-lg text-gray-800">$VALUE</span>
-                        </div> */}
+                        </div> 
                       </div>
-                    </div>
+                    </div> 
+                    */}
 
                     {/* Empty div for alignment */}
-                    <div className="col-span-1 flex justify-end items-start">
-                      {/* Download PDF button */}
-                      <button onClick={downloadPDF} className="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl transition duration-300 ease-in-out text-md shadow-lg">
-                        Download PDF
-                      </button>
-                    </div>
+                    
                   </div>
 
                   {/* Graphical Analysis Section */}

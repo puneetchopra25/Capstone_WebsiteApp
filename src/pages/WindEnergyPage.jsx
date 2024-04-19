@@ -87,7 +87,7 @@ const InputWithLabel = ({ label, id, value, onChange, error }) => (
       id={id}
       value={value}
       onChange={onChange}
-      className="mt-1 block w-2/3 p-2 border border-gray-700 rounded-3xl text-center"
+      className="mt-1 block w-2/3 h-15 p-2 border border-gray-700 rounded-3xl text-center"
     />
     {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
   </div>
@@ -103,7 +103,7 @@ const SectionDivider = () => (
 const DisplayWithLabel = ({ label, value }) => (
   <div className="flex items-center space-x-3 mb-4"> {/* Add some margin-bottom for spacing */}
     <label className="block text-sm font-medium w-1/3">{label}</label>
-    <span className="w-2/3 p-2 bg-gray-100 rounded-3xl flex items-center justify-center text-black">{value}</span> {/* Changed to bg-gray-100 for a distinct look */}
+    <span className="w-2/3 h-1/15 p-2 bg-gray-100 rounded-3xl flex items-center justify-center text-black">{value}</span> {/* Changed to bg-gray-100 for a distinct look */}
   </div>
 );
 const YearSelector = ({ selectedYear, onSelectYear }) => {
@@ -116,7 +116,7 @@ const YearSelector = ({ selectedYear, onSelectYear }) => {
         id="year-selector"
         value={selectedYear}
         onChange={onSelectYear}
-        className="mt-1 w-2/3 p-2 border border-gray-700 rounded-3xl flex text-center bg-blue-500 text-white"
+        className="mt-1 w-2/3 h-1/15 p-2 border border-gray-700 rounded-3xl flex text-center bg-blue-500 text-white"
       >
         {years.map((year) => (
           <option key={year} value={year}>
@@ -261,14 +261,14 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
             
           </section>
           <section className="mb-6">
-          <SectionDivider />
-          <SectionTitle title="Financial Parameters" />
+          {/* <SectionDivider /> */}
+          {/* <SectionTitle title="Financial Parameters" />
             <div className="flex flex-col space-y-4">
               
               <InputWithLabel label="Analysis Period (yrs)" id="analysisPeriod" value={analysisPeriod} onChange={handleInputChange} />
               <InputWithLabel label="Interest (%)" id="interestRate" value={interestRate} onChange={handleInputChange} />
               <InputWithLabel label="Cost of energy ($/kWh)" id="costOfEnergy" value={costOfEnergy} onChange={handleInputChange} />
-            </div>
+            </div> */}
           </section>
           <section className="mb-6">
           <SectionDivider />

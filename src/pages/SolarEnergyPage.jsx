@@ -5,6 +5,7 @@ import { GeoSearchControl, OpenStreetMapProvider } from 'leaflet-geosearch';
 import { MapContainer, TileLayer, useMapEvents, Marker, useMap } from 'react-leaflet';
 import 'leaflet-geosearch/dist/geosearch.css';
 import axios from 'axios';
+import { Switch } from '@headlessui/react';
 
 const DropdownWithLabel = ({ label, id, selectedValue, onChange, options }) => {
     return (
@@ -14,7 +15,7 @@ const DropdownWithLabel = ({ label, id, selectedValue, onChange, options }) => {
           id={id}
           value={selectedValue}
           onChange={onChange}
-          className="mt-1 block w-2/3 p-2 border border-gray-700 rounded-3xl text-center bg-blue-500 text-white"
+          className="mt-1 block w-2/3 h-1/15 p-2 border border-gray-700 rounded-3xl text-center bg-blue-500 text-white"
         >
           {options.map((option, index) => (
             <option key={index} value={option}>
@@ -107,7 +108,7 @@ const SearchControl = ({ onLocationSelect }) => {
         id={id}
         value={value}
         onChange={onChange}
-        className="mt-1 block w-2/3 p-2 border border-gray-700 rounded-3xl text-center"
+        className="mt-1 block w-2/3 h-1/15 p-2 border border-gray-700 rounded-3xl text-center"
       />
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>
@@ -123,77 +124,96 @@ const SearchControl = ({ onLocationSelect }) => {
   const DisplayWithLabel = ({ label, value }) => (
     <div className="flex items-center space-x-3 mb-4"> {/* Add some margin-bottom for spacing */}
       <label className="block text-sm font-medium w-1/3">{label}</label>
-      <span className="w-2/3 p-2 bg-gray-100 rounded-3xl flex items-center justify-center text-black">{value}</span> {/* Changed to bg-gray-100 for a distinct look */}
+      <span className="w-2/3 h-1/15 p-2 bg-gray-100 rounded-3xl flex items-center justify-center text-black">{value}</span> {/* Changed to bg-gray-100 for a distinct look */}
     </div>
   );
-const SolarEnergyPage = ({setSolarCalcValues}) => {
+const SolarEnergyPage = ({setSolarCalcValues, systemCapacityOrArea,setSystemCapacityOrArea}) => {
     
     const [location, setLocation] = useState({ lat: 50.671, lng: -120.332 });
     const [error, setError] = useState('');
-    const [analysisPeriod, setAnalysisPeriod] = useState('');
-    const [interestRate, setInterestRate] = useState('');
-    const [costOfEnergy, setCostOfEnergy] = useState('');
-    const [systemCapacity, setSystemCapacity] = useState('');
+    // const [systemCapacityOrArea, setSystemCapacityOrArea] = useState(false);
+    const [analysisPeriod, setAnalysisPeriod] = useState('25');
+    const [interestRate, setInterestRate] = useState('0.07');
+    const [costOfEnergy, setCostOfEnergy] = useState('0.15');
+    const [systemCapacity, setSystemCapacity] = useState('1000');
     const [tracking, setTracking] = useState('Fixed');
-    const [cellPower, setCellPower] = useState('');
-    const [cellEfficiency, setCellEfficiency] = useState('');
-    const [tilt, setTilt] = useState('');
-    const [inverterEfficiency, setInverterEfficiency] = useState('');
-    const [electricalLosses, setElectricalLosses] = useState('');
+    const [cellPower, setCellPower] = useState('660');
+    const [cellEfficiency, setCellEfficiency] = useState('0.2');
+    const [tilt, setTilt] = useState('20');
+    const [inverterEfficiency, setInverterEfficiency] = useState('0.96');
+    const [electricalLosses, setElectricalLosses] = useState('0.14');
+    const [totalarea, setTotalarea] = useState('10000');
     const [isLoading, setIsLoading] = useState(false);
-
-
+    const [groundcoverage, setGroundcoverage] = useState('0.4');
+    // console.log('systemCapacityOrArea:', systemCapacityOrArea);
     useEffect(() => {
         return () => setSolarCalcValues(null);
       }, [setSolarCalcValues]);
+    useEffect(() => {
+      // Here you could perform actions like validation or even triggering a simulation.
+      // For example, if you want to clear certain fields when the toggle changes:
+      if (systemCapacityOrArea) {
+          // Clear the systemCapacity because we are defining the total area.
+          setSystemCapacity('1000');
+      } else {
+          // Clear the total area because we are defining the system capacity.
+          setTotalarea('10000');
+      }
 
+        // Note: Be cautious with triggering simulations directly within useEffect
+        // without user confirmation or clear user intention, as it might lead to unexpected behavior.
+    }, [systemCapacityOrArea]);
     const handleSimulation = useCallback(async () => {
-        // Start the loading process
-        setIsLoading(true);
-        // Construct your request payload with the farm parameters
-        try {
-            // Here you would replace the URL with the endpoint where your backend expects the farm parameters
-            const response = await axios.get('http://localhost:8080/api/solar_energy', {
-                params: {
-                    latitude: location.lat,
-                    longitude: location.lng,
-                    analysisPeriod,
-                    interestRate,
-                    costOfEnergy,
-                    systemCapacity,
-                    tracking,
-                    cellPower,
-                    cellEfficiency,
-                    tilt,
-                    inverterEfficiency,
-                    electricalLosses,
-                }
+      // Start the loading process
+      setIsLoading(true);
+      
+      try {
+          // Here you would replace the URL with the endpoint where your backend expects the farm parameters
+          const response = await axios.get('http://localhost:8080/api/solar_energy', {
+            params: {
+              latitude: location.lat,
+              longitude: location.lng,
+              analysisPeriod,
+              interestRate,
+              costOfEnergy,
+              tracking,
+              cellPower,
+              cellEfficiency,
+              tilt,
+              inverterEfficiency,
+              electricalLosses,
+              groundcoverage,
+              // Use the prop for determining which parameter to send:
+              ...(systemCapacityOrArea ? { totalarea } : { systemCapacity })
             }
-                
-            );
-            // Handle the response accordingly
-            setSolarCalcValues(response.data);
-        } catch (error) {
-            console.error('Error during simulation:', error);
-            // Handle error accordingly
-        } finally {
-            // Stop the loading process
-            setIsLoading(false);
-        }
-    }, [
-        location,
-        analysisPeriod,
-        interestRate,
-        costOfEnergy,
-        systemCapacity,
-        tracking,
-        cellPower,
-        cellEfficiency,
-        tilt,
-        inverterEfficiency,
-        electricalLosses,
-        setSolarCalcValues
-    ]);
+          });
+          
+          // Handle the response accordingly
+          setSolarCalcValues(response.data);
+      } catch (error) {
+          console.error('Error during simulation:', error);
+          // Handle error accordingly
+      } finally {
+          // Stop the loading process
+          setIsLoading(false);
+      }
+  }, [
+      location,
+      analysisPeriod,
+      interestRate,
+      costOfEnergy,
+      systemCapacity, // This now might come from the prop
+      tracking,
+      cellPower,
+      cellEfficiency,
+      tilt,
+      inverterEfficiency,
+      electricalLosses,
+      totalarea, // This now might come from the prop
+      groundcoverage,
+      setSolarCalcValues,
+      systemCapacityOrArea // Make sure this is added to the dependency array
+  ]);
 
     const handleTrackingChange = (e) => {
         setTracking(e.target.value);
@@ -239,13 +259,24 @@ const SolarEnergyPage = ({setSolarCalcValues}) => {
             case 'electricalLosses':
                 setElectricalLosses(value);
                 break;
+            case 'totalarea':
+                setTotalarea(value);
+              break;
+            case 'groundcoverage':
+                setGroundcoverage(value);
+                break;
             default:
               break;
           }
         }
       }, []);
 
-    
+      console.log("Current Toggle State:", systemCapacityOrArea);
+
+      const toggleSystemCapacityOrArea = () => {
+          console.log("Toggling from:", systemCapacityOrArea, "to:", !systemCapacityOrArea);
+          setSystemCapacityOrArea(!systemCapacityOrArea); // This should toggle the state
+      };
     
     return (
         <div className="h-screen p-6 overflow-auto transition duration-500 ease-in-out bg-gray-200">
@@ -273,14 +304,47 @@ const SolarEnergyPage = ({setSolarCalcValues}) => {
                     <div className="flex flex-col space-y-4">
                         <InputWithLabel label="Analysis Period (yrs)" id="analysisPeriod" value={analysisPeriod} onChange={handleInputChange} />
                         <InputWithLabel label="Interest (%)" id="interestRate" value={interestRate} onChange={handleInputChange} />
-                        <InputWithLabel label="Cost of energy ($/kWh)" id="costOfEnergy" value={costOfEnergy} onChange={handleInputChange} />
+                        <InputWithLabel label="Cost of Electricity ($/kWh)" id="costOfEnergy" value={costOfEnergy} onChange={handleInputChange} />
                     </div>
                 </section>
                 {/* Farm Parameters Section */}
                 <section className="mb-6">
                     <SectionDivider />
                     <SectionTitle title="System Parameters"/>
-                    <div className="flex flex-col space-y-4">
+                    
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-sm font-medium">Define Area?</span>
+                      
+                      <Switch
+                        checked={systemCapacityOrArea}
+                        onChange={toggleSystemCapacityOrArea} // This should update the state
+                        className={`${systemCapacityOrArea ? 'bg-blue-600' : 'bg-gray-400'}
+                                    relative inline-flex items-center h-6 rounded-full w-11`}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`${systemCapacityOrArea ? 'translate-x-6' : 'translate-x-1'}
+                                      inline-block w-4 h-4 transform bg-white rounded-full`}
+                        />
+                      </Switch>
+                    </div>
+
+                    {systemCapacityOrArea ? (
+                      <InputWithLabel
+                        label="Total Area (sq. m)"
+                        id="totalarea"
+                        value={totalarea}
+                        onChange={e => setTotalarea(e.target.value)}
+                      />
+                    ) : (
+                      <InputWithLabel
+                        label="System Capacity (kW)"
+                        id="systemCapacity"
+                        value={systemCapacity}
+                        onChange={e => setSystemCapacity(e.target.value)}
+                      />
+                    )}
+                    <div className="flex flex-col space-y-4 mt-4">
                         <DropdownWithLabel
                             label="Tracking"
                             id="tracking"
@@ -288,15 +352,10 @@ const SolarEnergyPage = ({setSolarCalcValues}) => {
                             onChange={handleTrackingChange}
                             options={['Fixed', '1-axis', '2-axis']}
                         />
-                        <InputWithLabel 
-                            label="System Capacity (kW)" 
-                            id="systemCapacity" 
-                            value={systemCapacity} 
-                            onChange={e => setSystemCapacity(e.target.value)} 
-                        />
 
+                
                         <InputWithLabel 
-                            label="Cell Power (kW)" 
+                            label="Cell Power (W)" 
                             id="cellPower" 
                             value={cellPower} 
                             onChange={e => setCellPower(e.target.value)} 
@@ -329,12 +388,19 @@ const SolarEnergyPage = ({setSolarCalcValues}) => {
                             value={electricalLosses} 
                             onChange={e => setElectricalLosses(e.target.value)} 
                         />
+                        <InputWithLabel 
+                            label="Ground Coverage Ratio (%)" 
+                            id="groundcoverage" 
+                            value={groundcoverage} 
+                            onChange={e => setGroundcoverage(e.target.value)} 
+                        />
+                        
                     </div>
                 </section>
 
                 <button
                     onClick={handleSimulation}
-                    className="w-full py-2 px-4 rounded-3xl font-bold mt-6 bg-blue-500 hover:bg-blue-400 transition duration-500 ease-in-out text-white"
+                    className="w-full py-2 px-4 h-1/5 rounded-3xl font-bold mt-6 bg-blue-500 hover:bg-blue-400 transition duration-500 ease-in-out text-white"
                     disabled={!!error}
                 >
                     Simulate
