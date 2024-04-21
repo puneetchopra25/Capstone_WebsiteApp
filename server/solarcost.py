@@ -77,8 +77,8 @@ def cashflow_plot(num_years, interest, capex, om_cost, annual_energy_kwh, cost_o
     # Create the bar plot
     ax.bar(years, cashflows, color='tab:orange', zorder=3,edgecolor="0.2")
     ax.set_xlabel('Year', fontsize=14)
-    ax.set_ylabel('Net Present Value (Thousands)', fontsize=14)
-    ax.set_title(f'{num_years} Year Cumulative Cash Flow', fontsize=16)
+    ax.set_ylabel('Present Value (Thousands $)', fontsize=14)
+    ax.set_title(f'{num_years} Year Net Revenue Forecast', fontsize=16)
     ax.set_xticks(years)  # Set the ticks to be at years
     ax.grid(color='0.8', linestyle='dashed', zorder=0, alpha=0.5)
 
@@ -117,7 +117,7 @@ def om_cost_plot(num_years, interest, system_capacity, om_cost):
     # years = list(range(1, num_years + 1))
     ax.bar(years, cashflows, color='tab:orange', zorder=3,edgecolor="0.2")
     ax.set_xlabel('Year', fontsize=14)
-    ax.set_ylabel('Net Present Value (Thousands)', fontsize=14)
+    ax.set_ylabel('Present Value (Thousands $)', fontsize=14)
     ax.set_title(f'Maintenance Costs', fontsize=16)
     ax.set_xticks(years)  # Set the ticks to be at years
     ax.grid(color='0.8', linestyle='dashed', zorder=0, alpha=0.5)
@@ -158,7 +158,7 @@ def generation_receipts(num_years, annual_energy_kwh, cost_of_electricity, inter
     # years = list(range(1, num_years + 1))
     ax.bar(years, cashflows, color='tab:orange', zorder=3,edgecolor="0.2")
     ax.set_xlabel('Year', fontsize=14)
-    ax.set_ylabel('Net Present Value (Thousands)', fontsize=14)
+    ax.set_ylabel('Present Value (Thousands $)', fontsize=14)
     ax.set_title(f'Power Generation Revenue', fontsize=16)
     ax.set_xticks(years)  # Set the ticks to be at years
     ax.grid(color='0.8', linestyle='dashed', zorder=0, alpha=0.5)

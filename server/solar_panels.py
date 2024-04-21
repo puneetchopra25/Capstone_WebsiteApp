@@ -2,7 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 import pandas as pd
+from datetime import datetime, timedelta
 import datetime as dt
+
 from suntime import Sun
 import pytz
 from timezonefinder import TimezoneFinder
@@ -40,6 +42,7 @@ class SolarPanel:
         # data = read_file(data_input)
         df = pd.DataFrame(data_input)
         #initalize some parameters
+        
         Year = df['Year']
         Month = df['Month']
         Day = df['Day']
@@ -75,6 +78,7 @@ class SolarPanel:
         
         return hour_angel,angel
     
+    
     def calculate_optimal_tilt_angel(self):
         if (self.latitude <= 23.5):
             latitude_angel = self.latitude
@@ -86,12 +90,13 @@ class SolarPanel:
         return latitude_angel
     
     def calculate_power(self, data_input):
-        df = pd.DataFrame(data_input)
+        # df = pd.DataFrame(data_input)
 
         # initialize some parameters
-        DHI = df['DHI']
-        DNI = df['DNI']
+        DHI = data_input['DHI']
+        DNI = data_input['DNI']
         #find the corresponding solar angels and optimal tilt angel with previous functions
+        
         hour_angel,angel = self.calculate_sun_angels(data_input)
         latitude_angel = self.calculate_optimal_tilt_angel()
 
@@ -100,15 +105,51 @@ class SolarPanel:
         if (self.tracking == 0):
             Energy = pd.DataFrame(0.95*(DNI+DHI)*np.cos(2*np.pi*(latitude_angel-angel-self.tilt)/360)*np.sin(2*np.pi*hour_angel/360)).T
             irradiation = pd.DataFrame((DNI+DHI)*np.cos(2*np.pi*(latitude_angel-angel-self.tilt)/360)*np.sin(2*np.pi*hour_angel/360)).T
+            print("enerrgy_0",Energy)
         elif (self.tracking == 1):
             Energy = pd.DataFrame(0.88*(DNI+DHI)*np.cos(2*np.pi*(latitude_angel-angel-self.tilt)/360)).T 
             irradiation = pd.DataFrame((DNI+DHI)*np.cos(2*np.pi*(latitude_angel-angel-self.tilt)/360)).T 
+            print("enerrgy_1",Energy)
         elif (self.tracking == 2):
             Energy = pd.DataFrame(0.85*(DNI+DHI))
             irradiation = pd.DataFrame((DNI+DHI))
+            print("enerrgy_2",Energy)
         #return the energy as well as solar irradiation after computation
         
-        return Energy * self.inverter_efficiency * self.cell_power * (1 - self.system_loss) / 1000, irradiation
+        return (Energy * self.inverter_efficiency * self.cell_power * (1 - self.system_loss) / 1000), irradiation.abs()
+    # def calculate_power(self, data_input):
+    #     # Limit data to first 8760 entries (number of hours in a year)
+    #     data_input = data_input[:8760]
+
+    #     # Initialize lists for storing computed values
+    #     energy_list = []
+    #     irradiation_list = []
+
+    #     # Process each entry
+    #     for entry in (data_input):
+    #         DHI = entry.get('DHI')
+    #         DNI = entry.get('DNI')
+
+    #         # Use placeholders for solar angle functions
+    #         hour_angle, angle = self.calculate_sun_angles(data_input)  # Calculate for each entry
+    #         latitude_angle = self.calculate_optimal_tilt_angel()
+
+    #         if self.tracking == 0:
+    #             energy = 0.95 * (DNI + DHI) * np.cos(2 * np.pi * (latitude_angle - angle[0] - self.tilt) / 360) * np.sin(2 * np.pi * hour_angle[0] / 360)
+    #             irradiation = (DNI + DHI) * np.cos(2 * np.pi * (latitude_angle - angle[0] - self.tilt) / 360) * np.sin(2 * np.pi * hour_angle[0] / 360)
+    #         elif self.tracking == 1:
+    #             energy = 0.88 * (DNI + DHI) * np.cos(2 * np.pi * (latitude_angle - angle[0] - self.tilt) / 360)
+    #             irradiation = (DNI + DHI) * np.cos(2 * np.pi * (latitude_angle - angle[0] - self.tilt) / 360)
+    #         elif self.tracking == 2:
+    #             energy = 0.85 * (DNI + DHI)
+    #             irradiation = (DNI + DHI)
+
+    #         # Adjust based on system parameters and append to lists
+    #         adjusted_energy = energy * self.inverter_efficiency * self.cell_power * (1 - self.system_loss) / 1000
+    #         energy_list.append(adjusted_energy)
+    #         irradiation_list.append(irradiation)
+
+    #     return energy_list, irradiation_list
     
     def Energy_Calculation_given_area(self, data_input, tot_Area):
         
@@ -121,7 +162,7 @@ class SolarPanel:
         area_required = total_module_area / self.gcr 
         
         power_list,irradiation = self.calculate_power(data_input)
-        self.power_list = power_list.to_numpy()
+        self.power_list = np.array(power_list)
         annual_Energy_per_device = np.sum(power_list)
         
         annual_energy_given_area = annual_Energy_per_device * number_of_device 
@@ -140,7 +181,7 @@ class SolarPanel:
         area_required = total_module_area / self.gcr 
         
         power_list,irradiation = self.calculate_power(data_input)
-        self.power_list = power_list.to_numpy()
+        self.power_list = np.array(power_list)
         annual_Energy_per_device = np.sum(power_list)
         
         annual_energy_given_capacity = number_of_device * annual_Energy_per_device
@@ -165,27 +206,27 @@ class SolarPanel:
     
     
     #now plot this
-    def monthly_energy_plot(self):
+    def monthly_energy_plot(self, num_devices):
         # Plot the monthly energy graph
         
         num_hours_per_month = [744,672, 744, 720, 744, 720, 744, 744, 720,744, 720, 744] #peice wise multiplication
         monthly_energy = []
         i = 0
         for hours_per_month in num_hours_per_month:
-            monthly_energy.append(np.sum(self.power_list[i:(hours_per_month+i)]))
+            monthly_energy.append(np.sum(self.power_list[i:(hours_per_month+i)]) * num_devices * 1e-3)
             
             i += hours_per_month
-        
+        print(monthly_energy)
         fig = Figure(figsize=(11, 6), dpi=100)
         ax = fig.add_subplot(111)
-        months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                'July', 'August', 'September', 'October', 'November', 'December']
+        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                'July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
         ax.bar(range(1, 13), monthly_energy, color='tab:blue', zorder=3, edgecolor="0.2")
         ax.set_xlabel('Month', fontsize=14)
-        ax.set_ylabel('Energy Output (kWh)',fontsize=14)
-        ax.set_title('Monthly Energy Output from Solar Panel',fontsize=16)
+        ax.set_ylabel('kWh',fontsize=14)
+        ax.set_title('Monthly AC Energy',fontsize=16)
         ax.set_xticks(range(1, 13))
-        ax.set_xticklabels(months, rotation=45, ha='right')  # Align right to prevent cutting
+        ax.set_xticklabels(months, ha='right')  # Align right to prevent cutting
 
         ax.grid(color='0.8', linestyle='dashed', zorder=0, alpha=0.5)
         

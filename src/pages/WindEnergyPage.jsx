@@ -162,6 +162,10 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
   const [rotorDiameter, setRotorDiameter] = useState('');
   const [selectedYear, setSelectedYear] = useState('2007');
   const [selectedTurbineIndex, setSelectedTurbineIndex] = useState(0);
+  const [turbineDetails, setTurbineDetails] = useState({
+    systemCapacity: turbineModels[0].ratedOutput, // Default to the first model in the list
+    rotorDiameter: turbineModels[0].rotorDiameter,
+  });
   const handleYearChange = (e) => {
     setSelectedYear(e.target.value);
     // Perform actions when the year changes, such as fetching new data
@@ -226,11 +230,26 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
       setIsLoading(false);
   }, [selectedTurbineIndex, selectedYear, location, setCalculatedValues]);
 
+  // const handleTurbineChange = (e) => {
+  //   const index = e.target.value;
+  //   setSelectedTurbineIndex(index);
+  //   setSystemCapacity(turbineModels[index].ratedOutput);
+  //   setRotorDiameter(turbineModels[index].rotorDiameter);
+  // };
   const handleTurbineChange = (e) => {
     const index = e.target.value;
-    setSelectedTurbineIndex(index);
-    setSystemCapacity(turbineModels[index].ratedOutput);
-    setRotorDiameter(turbineModels[index].rotorDiameter);
+    const selectedTurbine = turbineModels[index];
+    setTurbineDetails({
+      systemCapacity: selectedTurbine.ratedOutput,
+      rotorDiameter: selectedTurbine.rotorDiameter,
+    });
+  };
+  const handleTurbineDetailChange = (e) => {
+    const { id, value } = e.target;
+    setTurbineDetails((prevDetails) => ({
+      ...prevDetails,
+      [id]: value,
+    }));
   };
   return (
     <div className="h-screen bg-gray-200 p-6 overflow-auto transition duration-500 ease-in-out">
@@ -276,10 +295,21 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
             <div className="flex flex-col space-y-4">
               <YearSelector selectedYear={selectedYear} onSelectYear={handleYearChange} />
               <TurbineSelector onSelectTurbine={handleTurbineChange} />
-              {/* <InputWithLabel label="Rated Output (kW)" id="systemCapacity" value={systemCapacity} onChange={handleInputChange} />
-              <InputWithLabel label="Rotor Diameter (m)" id="rotorDiameter" value={rotorDiameter} onChange={handleInputChange} /> */}
-              <DisplayWithLabel label="Rated Output (kW)" value={turbineModels[selectedTurbineIndex].ratedOutput} />
-              <DisplayWithLabel label="Rotor Diameter (m)" value={turbineModels[selectedTurbineIndex].rotorDiameter} />
+              
+              {/* <DisplayWithLabel label="Rated Output (kW)" value={turbineModels[selectedTurbineIndex].ratedOutput} />
+              <DisplayWithLabel label="Rotor Diameter (m)" value={turbineModels[selectedTurbineIndex].rotorDiameter} /> */}
+              <InputWithLabel 
+                label="Rated Output (kW)" 
+                id="systemCapacity" 
+                value={turbineDetails.systemCapacity} 
+                onChange={handleTurbineDetailChange} 
+              />
+              <InputWithLabel 
+                label="Rotor Diameter (m)" 
+                id="rotorDiameter" 
+                value={turbineDetails.rotorDiameter} 
+                onChange={handleTurbineDetailChange} 
+              />
             </div>
           </section>
           

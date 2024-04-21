@@ -22,9 +22,9 @@ class WindTurbine:
         self.number_of_turbines = number_of_turbines  
         self.power_curve = self.generate_power_curve()
         
-    # def adjust_wind_speed_for_shear(self, wind_speed):
-    #     # return wind_speed * (self.hub_height / self.measurement_height) ** self.shear_coefficient
-    #     return wind_speed ** self.shear_coefficient
+    def adjust_wind_speed_for_shear(self, wind_speed):
+        # return wind_speed * (self.hub_height / self.measurement_height) ** self.shear_coefficient
+        return wind_speed ** self.shear_coefficient
 
     def generate_power_curve(self):
         cut_in_speed = 3
@@ -145,8 +145,8 @@ class WindTurbine:
         
         # Plot the Weibull PDF
         plt.figure(figsize=(8, 4))
-        plt.plot(wind_speeds_plot, pdf_values, label='Weibull PDF')
-        plt.hist(wind_speeds, bins=30, density=True, alpha=0.5, label='Actual Wind Speeds', edgecolor='k')
+        plt.plot(wind_speeds_plot, pdf_values, label='Weibull PDF',color='tab:orange')
+        plt.hist(wind_speeds, bins=30, density=True, alpha=0.5, label='Actual Wind Speeds', edgecolor='0.2',color='tab:blue')
         plt.xlabel('Wind Speed (m/s)')
         plt.ylabel('Probability Density')
         plt.title('Weibull PDF of Wind Speeds')
@@ -216,7 +216,7 @@ class WindTurbine:
             
         simulated_annual_energy_outputs = np.array(simulated_annual_energy_outputs)
         mean_simulated_annual_energy = np.mean(simulated_annual_energy_outputs)
-        conf_interval = np.percentile(simulated_annual_energy_outputs, [1, 99])
+        conf_interval = np.percentile(simulated_annual_energy_outputs, [2.5, 97.5])
         
         conf_interval_formatted = f"{conf_interval[0]:,.2f} - {conf_interval[1]:,.2f} kWh"
         
@@ -246,9 +246,10 @@ class WindTurbine:
         months = range(1, 13)  # 1 to 12 for January to December
         plt.bar(months, monthly_energies, color='tab:blue')
         plt.xlabel('Month')
-        plt.ylabel('Energy Produced (kWh)')
-        plt.title('Monthly Energy Production')
-        plt.xticks(months, ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+        plt.ylabel('kWh')
+        plt.title('Monthly AC Energy')
+        plt.xticks(months, ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+        plt.grid(False)
         buf = BytesIO()
         plt.savefig(buf, format='png')
         plt.close()
@@ -268,6 +269,7 @@ class WindTurbine:
         plt.title('Distribution of Simulated Annual Energy Outputs')
         plt.xlabel('Annual Energy (kWh)')
         plt.ylabel('Frequency')
+        plt.grid(False)
         buf = BytesIO()
         plt.savefig(buf, format='png')
         plt.close()

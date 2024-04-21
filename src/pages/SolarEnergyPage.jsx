@@ -193,10 +193,10 @@ const SolarEnergyPage = ({setSolarCalcValues, systemCapacityOrArea,setSystemCapa
       } catch (error) {
           console.error('Error during simulation:', error);
           // Handle error accordingly
-      } finally {
+      }
           // Stop the loading process
           setIsLoading(false);
-      }
+      
   }, [
       location,
       analysisPeriod,
@@ -280,6 +280,13 @@ const SolarEnergyPage = ({setSolarCalcValues, systemCapacityOrArea,setSystemCapa
     
     return (
         <div className="h-screen p-6 overflow-auto transition duration-500 ease-in-out bg-gray-200">
+            {isLoading && (
+              <div className="fixed top-1/2 left-0 right-0 z-50" style={{ transform: 'translateY(-50%)' }}>
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-blue-600" style={{ borderTopColor: 'transparent' }}></div>
+                </div>
+              </div>
+            )}
             <div className="max-w-md mx-auto text-gray-900">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-xl font-semibold">Solar Energy Calculator</h1>
@@ -302,7 +309,7 @@ const SolarEnergyPage = ({setSolarCalcValues, systemCapacityOrArea,setSystemCapa
                     <SectionDivider />
                     <SectionTitle title="Financial Parameters" />
                     <div className="flex flex-col space-y-4">
-                        <InputWithLabel label="Analysis Period (yrs)" id="analysisPeriod" value={analysisPeriod} onChange={handleInputChange} />
+                        <InputWithLabel label="Analysis Period (years)" id="analysisPeriod" value={analysisPeriod} onChange={handleInputChange} />
                         <InputWithLabel label="Interest (%)" id="interestRate" value={interestRate} onChange={handleInputChange} />
                         <InputWithLabel label="Cost of Electricity ($/kWh)" id="costOfEnergy" value={costOfEnergy} onChange={handleInputChange} />
                     </div>
@@ -313,7 +320,7 @@ const SolarEnergyPage = ({setSolarCalcValues, systemCapacityOrArea,setSystemCapa
                     <SectionTitle title="System Parameters"/>
                     
                     <div className="flex justify-between items-center mb-4">
-                      <span className="text-sm font-medium">Define Area?</span>
+                      <span className="text-sm font-medium">Define size by area</span>
                       
                       <Switch
                         checked={systemCapacityOrArea}
@@ -338,7 +345,7 @@ const SolarEnergyPage = ({setSolarCalcValues, systemCapacityOrArea,setSystemCapa
                       />
                     ) : (
                       <InputWithLabel
-                        label="System Capacity (kW)"
+                        label="System Capacity (kWdc)"
                         id="systemCapacity"
                         value={systemCapacity}
                         onChange={e => setSystemCapacity(e.target.value)}
