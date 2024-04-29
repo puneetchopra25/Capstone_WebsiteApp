@@ -279,7 +279,7 @@ const SolarEnergyPage = ({setSolarCalcValues, systemCapacityOrArea,setSystemCapa
       };
     
     return (
-        <div className="h-screen p-6 overflow-auto transition duration-500 ease-in-out bg-gray-200">
+        <div className="h-screen p-6 py-0 overflow-auto transition duration-500 ease-in-out bg-gray-200">
             {isLoading && (
               <div className="fixed top-1/2 left-0 right-0 z-50" style={{ transform: 'translateY(-50%)' }}>
                 <div className="flex items-center justify-center">
@@ -307,7 +307,7 @@ const SolarEnergyPage = ({setSolarCalcValues, systemCapacityOrArea,setSystemCapa
                 {/* Financial Parameters Section */}
                 <section className="mb-6">
                     <SectionDivider />
-                    <SectionTitle title="Financial Parameters" />
+                    <SectionTitle title="Cost Parameters" />
                     <div className="flex flex-col space-y-4">
                         <InputWithLabel label="Analysis Period (years)" id="analysisPeriod" value={analysisPeriod} onChange={handleInputChange} />
                         <InputWithLabel label="Interest (%)" id="interestRate" value={interestRate} onChange={handleInputChange} />
@@ -405,13 +405,15 @@ const SolarEnergyPage = ({setSolarCalcValues, systemCapacityOrArea,setSystemCapa
                     </div>
                 </section>
 
-                <button
+                <div className="sticky bottom-0 bg-gray-200 pt-3 pb-2 z-10">
+                  <button
                     onClick={handleSimulation}
-                    className="w-full py-2 px-4 h-1/5 rounded-3xl font-bold mt-6 bg-blue-500 hover:bg-blue-400 transition duration-500 ease-in-out text-white"
+                    className="w-full py-2 px-4 rounded-3xl font-bold bg-blue-500 hover:bg-blue-400 transition duration-500 ease-in-out text-white"
                     disabled={!!error}
-                >
+                  >
                     Simulate
-                </button>
+                  </button>
+                </div>
             </div>
         </div>
     );

@@ -161,6 +161,7 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
   const [systemCapacity, setSystemCapacity] = useState('');
   const [rotorDiameter, setRotorDiameter] = useState('');
   const [selectedYear, setSelectedYear] = useState('2007');
+  const [numberOfSimulations, setNumberOfSimulations] = useState(100);
   const [selectedTurbineIndex, setSelectedTurbineIndex] = useState(0);
   const [turbineDetails, setTurbineDetails] = useState({
     systemCapacity: turbineModels[0].ratedOutput, // Default to the first model in the list
@@ -209,7 +210,9 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
     }
   }, []);
   const [isLoading, setIsLoading] = useState(false);
-
+  const handleSliderChange = (e) => {
+    setNumberOfSimulations(e.target.value);
+  };
   const handleSimulation = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -220,7 +223,8 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
           rotorDiameter: selectedTurbine.rotorDiameter, // Use rotorDiameter from the selected turbine
           year: selectedYear,
           latitude: location.lat, // from the MapComponent's location state
-          longitude: location.lng
+          longitude: location.lng,
+          numberOfSimulations: numberOfSimulations
         }
       });
       setCalculatedValues(response.data);
@@ -228,7 +232,7 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
       console.error('Error fetching simulation data:', error);
     }
       setIsLoading(false);
-  }, [selectedTurbineIndex, selectedYear, location, setCalculatedValues]);
+  }, [selectedTurbineIndex, selectedYear, location, numberOfSimulations,setCalculatedValues]);
 
   // const handleTurbineChange = (e) => {
   //   const index = e.target.value;
@@ -252,7 +256,7 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
     }));
   };
   return (
-    <div className="h-screen bg-gray-200 p-6 overflow-auto transition duration-500 ease-in-out">
+    <div className="h-screen bg-gray-200 px-6 py-0 overflow-auto transition duration-500 ease-in-out">
         {isLoading && (
           <div className="fixed top-1/2 left-0 right-0 z-50" style={{ transform: 'translateY(-50%)' }}>
             <div className="flex items-center justify-center">
@@ -293,6 +297,21 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
           <SectionDivider />
           <SectionTitle title="Turbine Parameters" />
             <div className="flex flex-col space-y-4">
+              <div className="flex items-center space-x-3">
+                <label htmlFor="num-simulations" className="block text-sm font-medium w-1/3">Number of simulations</label>
+                <div className="flex items-center w-full">
+                  <input
+                    type="range"
+                    id="num-simulations"
+                    min="100"
+                    max="999"
+                    value={numberOfSimulations}
+                    onChange={handleSliderChange}
+                    className="mt-1 block w-full h-2 bg-gray-600 rounded-full cursor-pointer ml-9"
+                  />
+                  <span className="ml-3 text-sm font-medium">{numberOfSimulations}</span>
+                </div>
+              </div>
               <YearSelector selectedYear={selectedYear} onSelectYear={handleYearChange} />
               <TurbineSelector onSelectTurbine={handleTurbineChange} />
               
@@ -313,13 +332,22 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
             </div>
           </section>
           
-          <button
+          {/* <button
             onClick={handleSimulation}
             className="w-full py-2 px-4 rounded-3xl font-bold mt-6 bg-blue-500 hover:bg-blue-400 transition duration-500 ease-in-out text-white"
             disabled={!!error}
           >
             Simulate
-          </button>
+          </button> */}
+          <div className="sticky bottom-0 bg-gray-200 pt-3 pb-2 z-10">
+            <button
+              onClick={handleSimulation}
+              className="w-full py-2 px-4 rounded-3xl font-bold bg-blue-500 hover:bg-blue-400 transition duration-500 ease-in-out text-white"
+              disabled={!!error}
+            >
+              Simulate
+            </button>
+          </div>
         </div>
       </div>
     </div>

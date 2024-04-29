@@ -77,7 +77,7 @@ const App = () => {
           <SidebarItem icon={<Wind size={20} />} text="Wind Energy" to="/wind-energy" alert />
           <SectionDivider/>
           
-          <SidebarItem icon={<LifeBuoy size={20} />} text="Help" to="/help" />
+          {/* <SidebarItem icon={<LifeBuoy size={20} />} text="Help" to="/help" /> */}
           
         </Sidebar>
         <div className="flex-grow bg-gray-300">

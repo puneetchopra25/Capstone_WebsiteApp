@@ -1,6 +1,6 @@
 
 import { ChevronFirst, ChevronLast } from "lucide-react";
-import pure_sim from "../assets/pure_sim.png";
+import pure_sim from "../assets/puresim_2_logo-removebg-preview.png";
 //import logo_black from "../assets/logo_black.png";
 import { createContext, useContext, useState } from "react";
 import { NavLink } from 'react-router-dom';
@@ -16,8 +16,8 @@ export default function Sidebar({ children }) {
                 <nav className="h-full flex flex-col border-r shadow-sm bg-gray-200">
                     <div className="p-4 pb-2 flex justify-between items-center ">
                         <img src={pure_sim} className={`overflow-hidden transition-all duration-300 ${expanded ? "w-44" : "w-0"}`} alt="Logo" />
-                        
-                        <button onClick={() => setExpanded((curr) => !curr)} className="p-1.5 rounded-lg bg-gray-50 hover:bg-gray-600">
+                        {/* <h2 className="text-blue-500 font-bold italic text-2xl overflow-hidden transition-all duration-300">PURE-SIM</h2> */}
+                        <button onClick={() => setExpanded((curr) => !curr)} className="p-1.5 rounded-lg bg-gray-300 hover:bg-gray-400">
                             {expanded ? <ChevronFirst size={20} /> : <ChevronLast size={20} />}
                         </button>
                     </div>
