@@ -217,7 +217,7 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
     setIsLoading(true);
     try {
       const selectedTurbine = turbineModels[selectedTurbineIndex];
-      const response = await axios.get(`http://localhost:8080/api/users`, {
+      const response = await axios.get(`https://server-fluor-10.onrender.com/api/users`, {
         params: {
           systemCapacity: selectedTurbine.ratedOutput, // Use ratedOutput from the selected turbine
           rotorDiameter: selectedTurbine.rotorDiameter, // Use rotorDiameter from the selected turbine

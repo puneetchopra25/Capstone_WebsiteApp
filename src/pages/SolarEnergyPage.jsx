@@ -169,7 +169,7 @@ const SolarEnergyPage = ({setSolarCalcValues, systemCapacityOrArea,setSystemCapa
       
       try {
           // Here you would replace the URL with the endpoint where your backend expects the farm parameters
-          const response = await axios.get('http://localhost:8080/api/solar_energy', {
+          const response = await axios.get('https://server-fluor-10.onrender.com/api/solar_energy', {
             params: {
               latitude: location.lat,
               longitude: location.lng,
