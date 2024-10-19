@@ -24,3 +24,20 @@ export const DisplayWithLabel = ({ label, value }) => (
     {/* Changed to bg-gray-100 for a distinct look */}
   </div>
 );
+
+// Creates an input with a label and value
+export const InputWithLabel = ({ label, id, value, onChange, error }) => (
+  <div className="flex items-center space-x-3">
+    <label htmlFor={id} className="block text-sm font-medium w-1/3">
+      {label}
+    </label>
+    <input
+      type="text"
+      id={id}
+      value={value}
+      onChange={onChange}
+      className="mt-1 block w-2/3 h-15 p-2 border border-gray-700 rounded-3xl text-center"
+    />
+    {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+  </div>
+);

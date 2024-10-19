@@ -11,6 +11,7 @@ import HelpPage from "./pages/HelpPage";
 import Windresultspage from "./pages/Windresultspage";
 import SolarResultsPage from "./pages/Solarresultspage";
 import { SectionDivider } from "./components/CommonComponents";
+import WelcomePage from "./pages/WelcomePage";
 
 const App = () => {
   const [calculatedValues, setCalculatedValues] = useState(null);
@@ -89,24 +90,29 @@ const App = () => {
         <div className="flex-grow bg-gray-300">
           <main>
             <Routes>
+              <Route path="/" element={<WelcomePage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/help" element={<HelpPage />} />
             </Routes>
-            <Windresultspage
-              calculatedValues={calculatedValues}
-              weibullPlotImage={weibullPlotImage}
-              powerCurvePlotImage={powerCurvePlotImage}
-              monthly_wind_energy={monthly_wind_energy}
-              range_plot_wind={range_plot_wind}
-            />
-            <SolarResultsPage
-              solarCalcValues={solarCalcValues}
-              solarPlotImage={solarPlotImage}
-              systemCapacityOrArea={systemCapacityOrArea}
-              recieptPlotImage={recieptPlotImage}
-              omcostPlotImage={omcostPlotImage}
-              cashflowPlotImage={cashflowPlotImage}
-            />
+            {calculatedValues && (
+              <Windresultspage
+                calculatedValues={calculatedValues}
+                weibullPlotImage={weibullPlotImage}
+                powerCurvePlotImage={powerCurvePlotImage}
+                monthly_wind_energy={monthly_wind_energy}
+                range_plot_wind={range_plot_wind}
+              />
+            )}
+            {solarCalcValues && (
+              <SolarResultsPage
+                solarCalcValues={solarCalcValues}
+                solarPlotImage={solarPlotImage}
+                systemCapacityOrArea={systemCapacityOrArea}
+                recieptPlotImage={recieptPlotImage}
+                omcostPlotImage={omcostPlotImage}
+                cashflowPlotImage={cashflowPlotImage}
+              />
+            )}
           </main>
         </div>
         <div className="mr-0">

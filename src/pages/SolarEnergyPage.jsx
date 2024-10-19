@@ -16,6 +16,7 @@ import {
   SectionDivider,
   SectionTitle,
   DisplayWithLabel,
+  InputWithLabel,
 } from "../components/CommonComponents";
 
 const DropdownWithLabel = ({ label, id, selectedValue, onChange, options }) => {
@@ -116,22 +117,6 @@ const MapComponent = ({ center, onLocationSelect, selectedLocation }) => {
   );
 };
 
-const InputWithLabel = ({ label, id, value, onChange, error }) => (
-  <div className="flex items-center space-x-3">
-    <label htmlFor={id} className="block text-sm font-medium w-1/3">
-      {label}
-    </label>
-    <input
-      type="text"
-      id={id}
-      value={value}
-      onChange={onChange}
-      className="mt-1 block w-2/3 h-1/15 p-2 border border-gray-700 rounded-3xl text-center"
-    />
-    {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-  </div>
-);
-
 const SolarEnergyPage = ({
   setSolarCalcValues,
   systemCapacityOrArea,
@@ -174,6 +159,8 @@ const SolarEnergyPage = ({
   const handleSimulation = useCallback(async () => {
     // Start the loading process
     setIsLoading(true);
+    // reset solar calculation values before new simulation
+    setSolarCalcValues(null);
 
     try {
       // Here you would replace the URL with the endpoint where your backend expects the farm parameters

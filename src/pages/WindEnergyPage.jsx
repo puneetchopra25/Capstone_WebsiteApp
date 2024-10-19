@@ -16,6 +16,7 @@ import {
   SectionDivider,
   SectionTitle,
   DisplayWithLabel,
+  InputWithLabel,
 } from "../components/CommonComponents";
 
 const SearchControl = ({ onLocationSelect }) => {
@@ -94,22 +95,6 @@ const MapComponent = ({ center, onLocationSelect, selectedLocation }) => {
   );
 };
 
-const InputWithLabel = ({ label, id, value, onChange, error }) => (
-  <div className="flex items-center space-x-3">
-    <label htmlFor={id} className="block text-sm font-medium w-1/3">
-      {label}
-    </label>
-    <input
-      type="text"
-      id={id}
-      value={value}
-      onChange={onChange}
-      className="mt-1 block w-2/3 h-15 p-2 border border-gray-700 rounded-3xl text-center"
-    />
-    {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-  </div>
-);
-
 const YearSelector = ({ selectedYear, onSelectYear }) => {
   const years = Array.from({ length: 8 }, (_, index) => 2007 + index); // Generate years from 2007 to 2014
 
@@ -136,6 +121,8 @@ const YearSelector = ({ selectedYear, onSelectYear }) => {
     </div>
   );
 };
+
+// Turbine models with their respective rated output and rotor diameter
 const turbineModels = [
   { id: 0, name: "Nordex N60-1300", ratedOutput: 1300, rotorDiameter: 60 },
   { id: 1, name: "GE 1.5sle", ratedOutput: 1500, rotorDiameter: 77 },
@@ -144,7 +131,7 @@ const turbineModels = [
   { id: 4, name: "Gamesa G97 2.0MW", ratedOutput: 2000, rotorDiameter: 97 },
 ];
 
-const TurbineSelector = ({ onSelectTurbine }) => (
+const TurbineSelector = ({ onSelectTurbine, selectedTurbineIndex }) => (
   <div className="flex items-center space-x-3 justify-center mb-4">
     <label
       htmlFor="turbine-selector"
@@ -155,6 +142,7 @@ const TurbineSelector = ({ onSelectTurbine }) => (
     <select
       id="turbine-selector"
       onChange={onSelectTurbine}
+      value={selectedTurbineIndex}
       className="mt-1 w-2/3 p-2 border border-gray-700 rounded-3xl text-center bg-blue-500 text-white"
     >
       {turbineModels.map((turbine) => (
@@ -175,11 +163,21 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
   const [rotorDiameter, setRotorDiameter] = useState("");
   const [selectedYear, setSelectedYear] = useState("2007");
   const [numberOfSimulations, setNumberOfSimulations] = useState(100);
-  const [selectedTurbineIndex, setSelectedTurbineIndex] = useState(0);
-  const [turbineDetails, setTurbineDetails] = useState({
-    systemCapacity: turbineModels[0].ratedOutput, // Default to the first model in the list
+
+  // const [selectedTurbineIndex, setSelectedTurbineIndex] = useState(0);
+  // const [turbineDetails, setTurbineDetails] = useState({
+  //   systemCapacity: turbineModels[0].ratedOutput, // Default to the first model in the list
+  //   rotorDiameter: turbineModels[0].rotorDiameter,
+  // });
+
+  // Selected turbine details for simulation
+  const [selectedTurbineDetails, setSelectedTurbineDetails] = useState({
+    index: 0,
+    name: turbineModels[0].name,
+    systemCapacity: turbineModels[0].ratedOutput,
     rotorDiameter: turbineModels[0].rotorDiameter,
   });
+
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -227,14 +225,14 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
   // Handle the simulation logic
   const handleSimulation = useCallback(async () => {
     setIsLoading(true);
+    setCalculatedValues(null); // Reset previous results before starting the new simulation
     try {
-      const selectedTurbine = turbineModels[selectedTurbineIndex];
       const response = await axios.get(
         `https://server-fluor-10.onrender.com/api/users`,
         {
           params: {
-            systemCapacity: selectedTurbine.ratedOutput,
-            rotorDiameter: selectedTurbine.rotorDiameter,
+            systemCapacity: selectedTurbineDetails.systemCapacity,
+            rotorDiameter: selectedTurbineDetails.rotorDiameter,
             year: selectedYear,
             latitude: location.lat,
             longitude: location.lng,
@@ -242,7 +240,6 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
           },
         }
       );
-
       setCalculatedValues(response.data);
     } catch (error) {
       console.error("Error fetching simulation data:", error);
@@ -250,35 +247,36 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [
-    selectedTurbineIndex,
-    selectedYear,
-    location,
-    numberOfSimulations,
-    setCalculatedValues,
-  ]);
+  }, [selectedTurbineDetails, selectedYear, location, numberOfSimulations]);
 
-  // const handleTurbineChange = (e) => {
-  //   const index = e.target.value;
-  //   setSelectedTurbineIndex(index);
-  //   setSystemCapacity(turbineModels[index].ratedOutput);
-  //   setRotorDiameter(turbineModels[index].rotorDiameter);
-  // };
+  // Handle the turbine selection change event and update the turbine details
   const handleTurbineChange = (e) => {
+    // get the index and the selected turbine model
     const index = e.target.value;
     const selectedTurbine = turbineModels[index];
-    setTurbineDetails({
+
+    // setSelectedTurbineIndex(index);
+    // setTurbineDetails({
+    //   systemCapacity: selectedTurbine.ratedOutput,
+    //   rotorDiameter: selectedTurbine.rotorDiameter,
+    // });
+    setSelectedTurbineDetails({
+      index: index,
+      name: selectedTurbine.name,
       systemCapacity: selectedTurbine.ratedOutput,
       rotorDiameter: selectedTurbine.rotorDiameter,
     });
   };
+
+  // Handle the turbine details change event - rated output and rotor diameter
   const handleTurbineDetailChange = (e) => {
     const { id, value } = e.target;
-    setTurbineDetails((prevDetails) => ({
+    setSelectedTurbineDetails((prevDetails) => ({
       ...prevDetails,
       [id]: value,
     }));
   };
+
   return (
     <div className="h-screen bg-gray-200 px-6 py-0 overflow-auto transition duration-500 ease-in-out">
       {isLoading && (
@@ -361,20 +359,23 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
                 selectedYear={selectedYear}
                 onSelectYear={(e) => setSelectedYear(e.target.value)}
               />
-              <TurbineSelector onSelectTurbine={handleTurbineChange} />
+              <TurbineSelector
+                onSelectTurbine={handleTurbineChange}
+                selectedTurbineIndex={selectedTurbineDetails.index}
+              />
 
               {/* <DisplayWithLabel label="Rated Output (kW)" value={turbineModels[selectedTurbineIndex].ratedOutput} />
               <DisplayWithLabel label="Rotor Diameter (m)" value={turbineModels[selectedTurbineIndex].rotorDiameter} /> */}
               <InputWithLabel
                 label="Rated Output (kW)"
                 id="systemCapacity"
-                value={turbineDetails.systemCapacity}
+                value={selectedTurbineDetails.systemCapacity}
                 onChange={handleTurbineDetailChange}
               />
               <InputWithLabel
                 label="Rotor Diameter (m)"
                 id="rotorDiameter"
-                value={turbineDetails.rotorDiameter}
+                value={selectedTurbineDetails.rotorDiameter}
                 onChange={handleTurbineDetailChange}
               />
             </div>
