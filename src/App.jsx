@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Wind, Sun, Settings, LifeBuoy } from "lucide-react";
+import { Wind, Sun, Settings, LifeBuoy, Waves } from "lucide-react";
 import Sidebar, { SidebarItem } from "./components/Sidebar";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 // import { pdfjs, Document, Page } from 'react-pdf';
 
 import SolarEnergyPage from "./pages/SolarEnergyPage";
 import WindEnergyPage from "./pages/WindEnergyPage";
+import HydroEnergyPage from "./pages/HydroEnergyPage";
 import SettingsPage from "./pages/SettingsPage";
 import HelpPage from "./pages/HelpPage";
 import Windresultspage from "./pages/Windresultspage";
@@ -85,6 +86,11 @@ const App = () => {
             to="/wind-energy"
             alert
           />
+          <SidebarItem
+            icon={<Waves size={20} />}
+            text="Hydro Energy"
+            to="/hydro-energy"
+          />
           <SectionDivider />
 
           {/* <SidebarItem icon={<LifeBuoy size={20} />} text="Help" to="/help" /> */}
@@ -136,6 +142,7 @@ const App = () => {
                   <WindEnergyPage setCalculatedValues={setCalculatedValues} />
                 }
               />
+              <Route path="/hydro-energy" element={<HydroEnergyPage />} />
             </Routes>
           </main>
         </div>
