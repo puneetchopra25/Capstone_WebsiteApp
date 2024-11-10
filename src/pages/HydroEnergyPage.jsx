@@ -12,76 +12,169 @@ import {
 } from "../components/CommonComponents";
 
 // Default public token
-mapboxgl.accessToken =
+const MAPBOX_ACCESS_TOKEN =
   "pk.eyJ1IjoibWJrLXViYyIsImEiOiJjbTJ3OG9rZHkwNDBvMnFwcGc2NGs4bDM4In0.yg9mzKihbe1zaJJnPWGQvA";
 
 const MapComponent = ({
-  coordinates,
-  setCoordinates,
+  setRiverCoordinates,
+  setLandCoordinates,
+  riverCoordinates,
+  landCoordinates,
+  setElevationDifference,
   setWarningMessage,
   setShowPopup,
 }) => {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
-  const markerRef = useRef(null);
+  const riverMarkerRef = useRef(null);
+  const landMarkerRef = useRef(null);
 
-  // Add Marker to the location
-  const addMarker = (lngLat) => {
+  // Function to add a marker to the map
+  const addMarker = (lngLat, color, markerRef) => {
     if (markerRef.current) markerRef.current.remove();
-    markerRef.current = new mapboxgl.Marker({ color: "red" })
+    markerRef.current = new mapboxgl.Marker({ color })
       .setLngLat(lngLat)
       .addTo(mapRef.current);
   };
 
-  // Check if location is on a river
-  const isRiverLocation = (coordinates) => {
-    const riverFeatures = mapRef.current.queryRenderedFeatures(
-      mapRef.current.project(coordinates),
-      { layers: ["rivers-layer"] }
-    );
-    return riverFeatures.length > 0;
+  // Function to calculate the distance between two coordinates
+  const haversineDistance = (coord1, coord2) => {
+    const toRadians = (degree) => (degree * Math.PI) / 180;
+    const earthRadius = 6371; // Radius of the Earth in kilometers
+
+    const dLat = toRadians(coord2.lat - coord1.lat);
+    const dLng = toRadians(coord2.lng - coord1.lng);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRadians(coord1.lat)) *
+        Math.cos(toRadians(coord2.lat)) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    const distanceInKm = earthRadius * c; // Distance in kilometers
+    const distanceInM = distanceInKm * 1000; // Distance in meters
+
+    // Return distance with appropriate unit
+    return distanceInKm >= 1
+      ? `${distanceInKm.toFixed(3)} km` // Format for kilometers
+      : `${distanceInM.toFixed(3)} m`; // Format for meters
+  };
+
+  // Function to calculate the elevation gain - head
+  const calculateElevationDifference = () => {
+    if (riverCoordinates && landCoordinates) {
+      const riverElevation = mapRef.current.queryTerrainElevation([
+        riverCoordinates.lng,
+        riverCoordinates.lat,
+      ]);
+      const landElevation = mapRef.current.queryTerrainElevation([
+        landCoordinates.lng,
+        landCoordinates.lat,
+      ]);
+
+      const difference = Math.abs(riverElevation - landElevation);
+      setElevationDifference(difference);
+    }
+  };
+
+  // Function to reset the markers and line layer
+  const resetMarkers = () => {
+    if (riverMarkerRef.current) riverMarkerRef.current.remove();
+    if (landMarkerRef.current) landMarkerRef.current.remove();
+    setRiverCoordinates(null);
+    setLandCoordinates(null);
+
+    // Reset the line layer if it exists
+    if (mapRef.current.getLayer("line-layer")) {
+      mapRef.current.removeLayer("line-layer");
+      mapRef.current.removeSource("line-source");
+    }
+  };
+
+  // Function to update the line layer on the map
+  const updateLineLayer = () => {
+    if (mapRef.current && riverCoordinates && landCoordinates) {
+      const lineCoordinates = [
+        [riverCoordinates.lng, riverCoordinates.lat],
+        [landCoordinates.lng, landCoordinates.lat],
+      ];
+
+      // Check if the line source exists
+      const lineSource = mapRef.current.getSource("line-source");
+
+      if (lineSource) {
+        // If the source exists, update its data
+        lineSource.setData({
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: lineCoordinates,
+          },
+        });
+      } else {
+        // If the source doesn't exist, add the line source and layer
+        mapRef.current.addSource("line-source", {
+          type: "geojson",
+          data: {
+            type: "Feature",
+            geometry: {
+              type: "LineString",
+              coordinates: lineCoordinates,
+            },
+          },
+        });
+
+        mapRef.current.addLayer({
+          id: "line-layer",
+          type: "line",
+          source: "line-source",
+          layout: {
+            "line-cap": "round",
+            "line-join": "round",
+          },
+          paint: {
+            "line-color": "#FF0000",
+            "line-width": 5,
+          },
+        });
+      }
+    }
   };
 
   useEffect(() => {
-    // Initialize the map
     mapRef.current = new mapboxgl.Map({
+      accessToken: MAPBOX_ACCESS_TOKEN,
       container: mapContainerRef.current,
       style: "mapbox://styles/mapbox/outdoors-v12",
-      center: [coordinates.lng, coordinates.lat],
-      zoom: 10,
+      center: [-123.31544804187265, 49.93716452275511], // Initial coordinates for map
+      zoom: 15,
     });
 
-    // Add geocoder control
+    // Add geocoder and navigation controls to the map
     const geocoder = new MapboxGeocoder({
-      accessToken: mapboxgl.accessToken,
+      accessToken: MAPBOX_ACCESS_TOKEN,
       mapboxgl: mapboxgl,
       placeholder: "Enter address",
-      // flyTo: false,
+      flyTo: false,
     });
     mapRef.current.addControl(geocoder, "top-left");
 
     const navControl = new mapboxgl.NavigationControl({ showCompass: false });
     mapRef.current.addControl(navControl, "top-right");
 
-    // Geocoder result handler
     geocoder.on("result", (e) => {
       const newCoordinates = e.result.geometry.coordinates;
-
-      if (!isRiverLocation(newCoordinates)) {
-        setWarningMessage("Please select a valid river location.");
-        setShowPopup(true);
-        return;
-      }
-
-      // Update map and marker for river location
-      setCoordinates({ lng: newCoordinates[0], lat: newCoordinates[1] });
-      addMarker(newCoordinates);
       mapRef.current.flyTo({ center: newCoordinates });
-      setShowPopup(false);
     });
 
-    // Map load and add river layer
     mapRef.current.on("load", () => {
+      // Add initial markers for river and land coordinates
+      addMarker(riverCoordinates, "#87CEFA", riverMarkerRef);
+      addMarker(landCoordinates, "green", landMarkerRef);
+
+      // Add a layer for rivers
       mapRef.current.addLayer({
         id: "rivers-layer",
         type: "line",
@@ -91,36 +184,75 @@ const MapComponent = ({
         paint: { "line-color": "#0000FF", "line-width": 10 },
       });
 
-      // Map river click handler
-      mapRef.current.on("click", "rivers-layer", (e) => {
-        const newCoordinates = e.lngLat;
-        setCoordinates({ lng: newCoordinates.lng, lat: newCoordinates.lat });
-        addMarker(newCoordinates);
-        setShowPopup(false);
+      mapRef.current.addSource("mapbox-dem", {
+        type: "raster-dem",
+        url: "mapbox://mapbox.terrain-rgb",
+        tileSize: 512,
+        maxzoom: 14,
       });
 
-      // Hover cursor styles for river layer
-      mapRef.current.on("mouseenter", "rivers-layer", () => {
-        mapRef.current.getCanvas().style.cursor = "pointer";
+      mapRef.current.setTerrain({ source: "mapbox-dem", exaggeration: 1 });
+
+      // Add event listeners for clicks on river layer
+      mapRef.current.on("click", (e) => {
+        const features = mapRef.current.queryRenderedFeatures(e.point, {
+          layers: ["rivers-layer"],
+        });
+
+        if (features.length !== 0) {
+          const newCoordinates = e.lngLat;
+          setRiverCoordinates({
+            lng: newCoordinates.lng,
+            lat: newCoordinates.lat,
+          });
+          addMarker(newCoordinates, "#87CEFA", riverMarkerRef);
+        }
       });
-      mapRef.current.on("mouseleave", "rivers-layer", () => {
-        mapRef.current.getCanvas().style.cursor = "not-allowed";
+
+      // Add event listeners for clicks on land layer
+      mapRef.current.on("click", (e) => {
+        const features = mapRef.current.queryRenderedFeatures(e.point, {
+          layers: ["rivers-layer", "waterway", "water"],
+        });
+
+        if (features.length === 0) {
+          const newCoordinates = e.lngLat;
+          setLandCoordinates({
+            lng: newCoordinates.lng,
+            lat: newCoordinates.lat,
+          });
+          addMarker(newCoordinates, "green", landMarkerRef);
+        }
+      });
+
+      mapRef.current.getCanvas().style.cursor = "pointer";
+
+      // update the line layer on map load
+      updateLineLayer();
+
+      // Calculate the elevation difference on map load and mapbox-dem load
+      mapRef.current.on("data", (e) => {
+        if (e.sourceId === "mapbox-dem" && e.isSourceLoaded) {
+          calculateElevationDifference();
+        }
       });
     });
 
-    // Non-river click handler
-    mapRef.current.on("click", (e) => {
-      const features = mapRef.current.queryRenderedFeatures(e.point, {
-        layers: ["rivers-layer"],
-      });
-      if (features.length === 0) {
-        setWarningMessage("Please select a valid river location.");
-        setShowPopup(true);
-      }
-    });
-
-    return () => mapRef.current.remove(); // Cleanup on unmount
+    return () => mapRef.current.remove();
   }, []);
+
+  // Update the line layer and calculate the elevation difference when coordinates change
+  useEffect(() => {
+    if (mapRef.current && mapRef.current.isStyleLoaded()) {
+      updateLineLayer();
+      calculateElevationDifference();
+    }
+  }, [riverCoordinates, landCoordinates]);
+
+  const distance =
+    riverCoordinates && landCoordinates
+      ? haversineDistance(riverCoordinates, landCoordinates)
+      : null;
 
   return (
     <div
@@ -135,9 +267,16 @@ const HydroEnergyPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
-  const [coordinates, setCoordinates] = useState({
-    lng: -123.324311,
-    lat: 49.914079,
+  const [elevationDifference, setElevationDifference] = useState(null);
+  // const [riverCoordinates, setRiverCoordinates] = useState(null);
+  // const [landCoordinates, setLandCoordinates] = useState(null);
+  const [riverCoordinates, setRiverCoordinates] = useState({
+    lng: -123.31499038595129,
+    lat: 49.93712452275511,
+  });
+  const [landCoordinates, setLandCoordinates] = useState({
+    lng: -123.31644804187265,
+    lat: 49.937073777558595,
   });
 
   // Handle the simulation logic - for now it just shows a loading spinner
@@ -177,11 +316,20 @@ const HydroEnergyPage = () => {
             <SectionTitle title="Location" />
             <div className="mb-4 ">
               <MapComponent
-                coordinates={coordinates}
-                setCoordinates={setCoordinates}
+                setRiverCoordinates={setRiverCoordinates}
+                setLandCoordinates={setLandCoordinates}
+                riverCoordinates={riverCoordinates}
+                landCoordinates={landCoordinates}
+                setElevationDifference={setElevationDifference}
                 setWarningMessage={setWarningMessage}
                 setShowPopup={setShowPopup}
               />
+              {/* <MapComponent
+                // coordinates={coordinates}
+                // setCoordinates={setCoordinates}
+                setWarningMessage={setWarningMessage}
+                setShowPopup={setShowPopup}
+              /> */}
               {showPopup && (
                 <Popup
                   message={warningMessage}
@@ -189,20 +337,40 @@ const HydroEnergyPage = () => {
                 />
               )}
             </div>
+            <SectionTitle title="Intake (River) Coordinates" />
             <DisplayWithLabel
               label="Latitude (N)"
-              value={coordinates.lat.toFixed(3)}
+              value={riverCoordinates?.lat?.toFixed(3)}
             />
             <DisplayWithLabel
               label="Longitude (E)"
-              value={coordinates.lng.toFixed(3)}
+              value={riverCoordinates?.lng?.toFixed(3)}
+            />
+            <SectionTitle title="Power House (Land) Coordinates" />
+            <DisplayWithLabel
+              label="Latitude (N)"
+              value={landCoordinates?.lat?.toFixed(3)}
+            />
+            <DisplayWithLabel
+              label="Longitude (E)"
+              value={landCoordinates?.lng?.toFixed(3)}
             />
           </section>
           <section className="mb-6">
             <SectionDivider />
             <SectionTitle title="Hydro Parameters" />
             <div className="flex flex-col space-y-4">
+              <DisplayWithLabel
+                label="Head (m)"
+                value={elevationDifference?.toFixed(3)}
+              />
               <InputWithLabel label="XXXX" />
+            </div>
+          </section>
+          <section className="mb-6">
+            <SectionDivider />
+            <SectionTitle title="Cost Parameters" />
+            <div className="flex flex-col space-y-4">
               <InputWithLabel label="XXXX" />
             </div>
           </section>
