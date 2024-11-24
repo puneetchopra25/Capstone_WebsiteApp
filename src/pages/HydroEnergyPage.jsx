@@ -8,6 +8,7 @@ import {
   SectionTitle,
   DisplayWithLabel,
   InputWithLabel,
+  InputWithLabelAndSwitch,
   Popup,
 } from "../components/CommonComponents";
 
@@ -21,6 +22,7 @@ const MapComponent = ({
   riverCoordinates,
   landCoordinates,
   setElevationDifference,
+  setElevationWarningMessage,
   setWarningMessage,
   setShowPopup,
 }) => {
@@ -74,8 +76,16 @@ const MapComponent = ({
         landCoordinates.lat,
       ]);
 
-      const difference = Math.abs(riverElevation - landElevation);
+      const difference = riverElevation - landElevation;
       setElevationDifference(difference);
+
+      if (difference < 0) {
+        setElevationWarningMessage(
+          "Warning: Plant location must be at a lower elevation than intake location."
+        );
+      } else {
+        setElevationWarningMessage(null);
+      }
     }
   };
 
@@ -148,8 +158,9 @@ const MapComponent = ({
       accessToken: MAPBOX_ACCESS_TOKEN,
       container: mapContainerRef.current,
       style: "mapbox://styles/mapbox/outdoors-v12",
-      center: [-123.31544804187265, 49.93716452275511], // Initial coordinates for map
-      zoom: 15,
+      // center: [-123.31544804187265, 49.93716452275511], // Initial coordinates for map
+      center: [-123.362306, 49.931211], // Initial coordinates for map center
+      zoom: 11,
     });
 
     // Add geocoder and navigation controls to the map
@@ -271,13 +282,35 @@ const HydroEnergyPage = () => {
   // const [riverCoordinates, setRiverCoordinates] = useState(null);
   // const [landCoordinates, setLandCoordinates] = useState(null);
   const [riverCoordinates, setRiverCoordinates] = useState({
-    lng: -123.31499038595129,
-    lat: 49.93712452275511,
+    // lng: -123.31499038595129,
+    // lat: 49.93712452275511,
+
+    // *** change below coordinates to test with different latitude and Longitude ***
+
+    lng: -123.382306,
+    lat: 49.935694,
   });
   const [landCoordinates, setLandCoordinates] = useState({
-    lng: -123.31644804187265,
-    lat: 49.937073777558595,
+    // lng: -123.31644804187265,
+    // lat: 49.937073777558595,
+
+    // *** change below coordinates to test with different latitude and Longitude ***
+
+    lng: -123.324889,
+    lat: 49.914,
   });
+
+  const [flowRate, setFlowRate] = useState(10);
+  const [customFlowRate, setCustomFlowRate] = useState(false);
+  const [elevationWarningMessage, setElevationWarningMessage] = useState(null);
+
+  // Handle checkbox toggle to control custom flow rate
+  const handleCustomFlowRateToggle = () => {
+    setCustomFlowRate((prev) => !prev);
+    // if (customFlowRate) {
+    //   setFlowRate(10); // Reset flow rate to default value
+    // }
+  };
 
   // Handle the simulation logic - for now it just shows a loading spinner
   const handleSimulation = () => {
@@ -323,6 +356,7 @@ const HydroEnergyPage = () => {
                 setElevationDifference={setElevationDifference}
                 setWarningMessage={setWarningMessage}
                 setShowPopup={setShowPopup}
+                setElevationWarningMessage={setElevationWarningMessage}
               />
               {/* <MapComponent
                 // coordinates={coordinates}
@@ -337,6 +371,14 @@ const HydroEnergyPage = () => {
                 />
               )}
             </div>
+            {elevationWarningMessage && (
+              <div className="bg-red-100 rounded-2xl border-red-950 text-red-800 px-4 py-2 rounded relative mb-4">
+                <span className="block sm:inline">
+                  {elevationWarningMessage}
+                </span>
+              </div>
+            )}
+
             <SectionTitle title="Intake (River) Coordinates" />
             <DisplayWithLabel
               label="Latitude (N)"
@@ -360,6 +402,22 @@ const HydroEnergyPage = () => {
             <SectionDivider />
             <SectionTitle title="Hydro Parameters" />
             <div className="flex flex-col space-y-4">
+              {/* Flow Rate section  */}
+              <InputWithLabelAndSwitch
+                label="Set Custom Flow Rate (m³/s)"
+                id="flowRate"
+                value={flowRate}
+                onFlowChange={(e) => setFlowRate(e.target.value)}
+                error={
+                  flowRate && isNaN(flowRate)
+                    ? "Please enter a valid number"
+                    : null
+                }
+                isChecked={customFlowRate}
+                onSwitchChange={handleCustomFlowRateToggle}
+              />
+
+              {/* Elevation difference (Head) section */}
               <DisplayWithLabel
                 label="Head (m)"
                 value={elevationDifference?.toFixed(3)}
