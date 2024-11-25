@@ -436,7 +436,7 @@ const HydroEnergyPage = () => {
               <DisplayWithLabel label="Gravity (m/s²)" value="9.81" />
               {/*Efficiency section*/}
               <InputWithLabelAndSwitch
-                label="Effciency (%)"
+                label="Efficiency (%)"
                 id="efficiency"
                 customMessage="Please enter a custom efficiency value (in %)."
                 historicalMessage="System will use the default efficiency of 100%. Toggle to enable custom efficiency."
