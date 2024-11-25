@@ -303,6 +303,8 @@ const HydroEnergyPage = () => {
   const [flowRate, setFlowRate] = useState(10);
   const [customFlowRate, setCustomFlowRate] = useState(false);
   const [elevationWarningMessage, setElevationWarningMessage] = useState(null);
+  const [efficiency, setEfficiency] = useState(100);
+  const [customEfficiency, setCustomEfficiency] = useState(false);
 
   // Handle checkbox toggle to control custom flow rate
   const handleCustomFlowRateToggle = () => {
@@ -310,6 +312,10 @@ const HydroEnergyPage = () => {
     // if (customFlowRate) {
     //   setFlowRate(10); // Reset flow rate to default value
     // }
+  };
+
+  const handleCustomEfficiencyToggle = () => {
+    setCustomEfficiency((prev) => !prev);
   };
 
   // Handle the simulation logic - for now it just shows a loading spinner
@@ -404,10 +410,12 @@ const HydroEnergyPage = () => {
             <div className="flex flex-col space-y-4">
               {/* Flow Rate section  */}
               <InputWithLabelAndSwitch
-                label="Set Custom Flow Rate (m³/s)"
+                label="Flow Rate (m³/s)"
                 id="flowRate"
+                customMessage="Please enter a custom flow rate value."
+                historicalMessage="System will use historical flow rate based on the selected coordinates. Toggle to enable custom flow rate."
                 value={flowRate}
-                onFlowChange={(e) => setFlowRate(e.target.value)}
+                onChange={(e) => setFlowRate(e.target.value)}
                 error={
                   flowRate && isNaN(flowRate)
                     ? "Please enter a valid number"
@@ -422,7 +430,29 @@ const HydroEnergyPage = () => {
                 label="Head (m)"
                 value={elevationDifference?.toFixed(3)}
               />
-              <InputWithLabel label="XXXX" />
+              {/*Density of water section*/}
+              <DisplayWithLabel label="Density (kg/m³)" value="1000" />
+              {/*Gravity section*/}
+              <DisplayWithLabel label="Gravity (m/s²)" value="9.81" />
+              {/*Efficiency section*/}
+              <InputWithLabelAndSwitch
+                label="Effciency (%)"
+                id="efficiency"
+                customMessage="Please enter a custom efficiency value (in %)."
+                historicalMessage="System will use the default efficiency of 100%. Toggle to enable custom efficiency."
+                value={efficiency}
+                onFlowChange={(e) => setEfficiency(e.target.value)}
+                onChange={(e) => setEfficiency(e.target.value)}
+                error={
+                  efficiency && isNaN(efficiency)
+                    ? "Please enter a valid number"
+                    : null
+                }
+                isChecked={customEfficiency}
+                onSwitchChange={handleCustomEfficiencyToggle}
+              />
+
+              {/* <InputWithLabel label="XXXX" /> */}
             </div>
           </section>
           <section className="mb-6">

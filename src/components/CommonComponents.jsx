@@ -48,11 +48,15 @@ export const InputWithLabelAndSwitch = ({
   label,
   id,
   value,
-  onFlowChange,
+  customMessage,
+  historicalMessage,
+  onChange,
   error,
   isChecked,
   onSwitchChange,
 }) => {
+  // Check if the id is "efficiency" to set min and max
+  const isEfficiency = id === "efficiency";
   return (
     <div className="flex flex-col space-y-3">
       <div className="flex items-center space-x-3">
@@ -73,20 +77,35 @@ export const InputWithLabelAndSwitch = ({
         </Switch>
       </div>
       <p className="text-sm text-gray-500 mt-1">
-        {isChecked
-          ? "Please enter a custom flow rate value."
-          : "System will use historical flow rate based on the selected coordinates. Toggle to enable custom flow rate."}
+        {isChecked ? customMessage : historicalMessage}
       </p>
       {isChecked && (
-        <div className="flex justify-end">
-          <input
-            type="number"
-            id={id}
-            min={0}
-            value={value}
-            onChange={onFlowChange}
-            className="mt-1 block w-full max-w-[65%] h-15 p-2 border border-gray-700 rounded-3xl flex justify-end text-center"
-          />
+        <div className="flex justify-end items-center space-x-3">
+          {isEfficiency ? (
+            // Range input for "efficiency"
+            <>
+              <input
+                type="range"
+                id="efficiency"
+                min={0}
+                max={100}
+                value={value}
+                onChange={onChange}
+                className="mt-1 block w-full max-w-[60%] h-2 bg-gray-700 rounded-full cursor-pointer"
+              />
+              <span className="ml-3 text-sm font-medium">{value}</span>
+            </>
+          ) : (
+            // Regular number input for other cases
+            <input
+              type="number"
+              id={id}
+              min={0}
+              value={value}
+              onChange={onChange}
+              className="mt-1 block w-full max-w-[65%] h-15 p-2 border border-gray-700 rounded-3xl flex justify-end text-center"
+            />
+          )}
         </div>
       )}
 
