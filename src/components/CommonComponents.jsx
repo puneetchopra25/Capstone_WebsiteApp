@@ -1,6 +1,10 @@
 import React from "react";
 import { Switch } from "@headlessui/react";
 
+// Mapbox access token for the map
+export const MAPBOX_ACCESS_TOKEN =
+  "pk.eyJ1IjoibWJrLXViYyIsImEiOiJjbTJ3OG9rZHkwNDBvMnFwcGc2NGs4bDM4In0.yg9mzKihbe1zaJJnPWGQvA";
+
 // Creates a horizontal line as a section divider
 export const SectionDivider = () => (
   <div className="my-6 border-t-2 border-gray-700"></div>
@@ -27,15 +31,16 @@ export const DisplayWithLabel = ({ label, value }) => (
 );
 
 // Creates an input with a label and value
-export const InputWithLabel = ({ label, id, value, onChange, error }) => (
+export const InputWithLabel = ({ label, id, value, onChange, step, error }) => (
   <div className="flex items-center space-x-3 ">
     <label htmlFor={id} className="block text-sm font-medium w-1/3">
       {label}
     </label>
     <input
-      type="text"
+      type="number"
       id={id}
       value={value}
+      step={step}
       onChange={onChange}
       className="mt-1 block w-full max-w-[65%] h-15 p-2 border border-gray-700 rounded-3xl text-center"
     />
@@ -126,6 +131,28 @@ export const Popup = ({ message, onClose }) => {
         >
           Close
         </button>
+      </div>
+    </div>
+  );
+};
+
+export const LoadingSpinnerMessage = ({ energy }) => {
+  return (
+    <div
+      className="fixed top-1/2 left-0 right-[140px] z-50"
+      style={{ transform: "translateY(-50%)" }}
+    >
+      <div className="flex flex-col items-center justify-center">
+        {/* Spinner */}
+        <div
+          className="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-blue-600"
+          style={{ borderTopColor: "transparent" }}
+        ></div>
+        {/* Informative Message */}
+        <p className="mt-4 text-lg font-medium text-gray-700 text-center">
+          Running {energy || "the"} simulation, this may take a moment. Please
+          wait for the results...
+        </p>
       </div>
     </div>
   );

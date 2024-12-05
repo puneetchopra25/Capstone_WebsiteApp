@@ -10,11 +10,9 @@ import {
   InputWithLabel,
   InputWithLabelAndSwitch,
   Popup,
+  LoadingSpinnerMessage,
+  MAPBOX_ACCESS_TOKEN,
 } from "../components/CommonComponents";
-
-// Default public token
-const MAPBOX_ACCESS_TOKEN =
-  "pk.eyJ1IjoibWJrLXViYyIsImEiOiJjbTJ3OG9rZHkwNDBvMnFwcGc2NGs4bDM4In0.yg9mzKihbe1zaJJnPWGQvA";
 
 const MapComponent = ({
   setRiverCoordinates,
@@ -306,6 +304,11 @@ const HydroEnergyPage = () => {
   const [efficiency, setEfficiency] = useState(100);
   const [customEfficiency, setCustomEfficiency] = useState(false);
 
+  // cost paramaters
+  const [analysisPeriod, setAnalysisPeriod] = useState(40);
+  const [interestRate, setInterestRate] = useState(0.07);
+  const [costOfEnergy, setCostOfEnergy] = useState(0.11);
+
   // Handle checkbox toggle to control custom flow rate
   const handleCustomFlowRateToggle = () => {
     setCustomFlowRate((prev) => !prev);
@@ -329,19 +332,8 @@ const HydroEnergyPage = () => {
 
   return (
     <div className="h-screen bg-gray-200 px-6 py-0 overflow-auto transition duration-500 ease-in-out">
-      {isLoading && (
-        <div
-          className="fixed top-1/2 left-0 right-0 z-50"
-          style={{ transform: "translateY(-50%)" }}
-        >
-          <div className="flex items-center justify-center">
-            <div
-              className="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-blue-600"
-              style={{ borderTopColor: "transparent" }}
-            ></div>
-          </div>
-        </div>
-      )}
+      {isLoading && <LoadingSpinnerMessage energy="Hydro Energy" />}
+
       <div
         className={`w-[420px] mx-auto text-gray-900 ${
           isLoading ? "opacity-50" : ""
@@ -459,9 +451,30 @@ const HydroEnergyPage = () => {
             <SectionDivider />
             <SectionTitle title="Cost Parameters" />
             <div className="flex flex-col space-y-4">
-              <InputWithLabel label="XXXX" />
+              <InputWithLabel
+                label="Analysis period (years)"
+                id="analysisPeriod"
+                value={analysisPeriod}
+                step={1}
+                onChange={(e) => setAnalysisPeriod(e.target.value)}
+              />
+              <InputWithLabel
+                label="Interest (%)"
+                id="interestRate"
+                value={interestRate}
+                step={0.01}
+                onChange={(e) => setInterestRate(e.target.value)}
+              />
+              <InputWithLabel
+                label="Cost of Electricity ($/kWh)"
+                id="costOfEnergy"
+                value={costOfEnergy}
+                step={0.01}
+                onChange={(e) => setCostOfEnergy(e.target.value)}
+              />
             </div>
           </section>
+          <SectionDivider />
 
           <div className="sticky bottom-0 bg-gray-200 pt-3 pb-2 z-10">
             <button

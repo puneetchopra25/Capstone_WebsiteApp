@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
@@ -17,7 +17,15 @@ import {
   SectionTitle,
   DisplayWithLabel,
   InputWithLabel,
+  MAPBOX_ACCESS_TOKEN,
+  LoadingSpinnerMessage,
 } from "../components/CommonComponents";
+
+// new map module
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
+import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 
 const DropdownWithLabel = ({ label, id, selectedValue, onChange, options }) => {
   return (
@@ -41,79 +49,152 @@ const DropdownWithLabel = ({ label, id, selectedValue, onChange, options }) => {
   );
 };
 
-const SearchControl = ({ onLocationSelect }) => {
-  const map = useMap();
+// ------------------ Old Map Component (Leaflet) ------------------
+// const SearchControl = ({ onLocationSelect }) => {
+//   const map = useMap();
+
+//   useEffect(() => {
+//     const provider = new OpenStreetMapProvider();
+
+//     const searchControl = new GeoSearchControl({
+//       provider: provider,
+//       style: "bar",
+//       autoComplete: true,
+//       autoCompleteDelay: 250,
+//       showMarker: true,
+//       showPopup: false,
+//       marker: {
+//         icon: new L.Icon.Default(),
+//         draggable: false,
+//       },
+//       popupFormat: ({ query, result }) => result.label,
+//       maxMarkers: 1,
+//       retainZoomLevel: false,
+//       animateZoom: true,
+//       autoClose: true,
+//       searchLabel: "Enter address",
+//       keepResult: true,
+//     });
+
+//     map.addControl(searchControl);
+
+//     // Event listener for select the result
+//     map.on("geosearch/showlocation", (e) => {
+//       onLocationSelect({ lat: e.location.y, lng: e.location.x });
+//     });
+
+//     return () => {
+//       map.removeControl(searchControl);
+//     };
+//   }, [map, onLocationSelect]);
+
+//   return null;
+// };
+
+// const LocationPicker = ({ onLocationSelect, selectedLocation }) => {
+//   const map = useMapEvents({
+//     click(e) {
+//       // Check if there's already a selected location from the search bar
+//       if (!selectedLocation) {
+//         const { lat, lng } = e.latlng;
+//         onLocationSelect({ lat, lng });
+//       }
+//     },
+//   });
+
+//   // No Popup component returned
+//   return null;
+// };
+
+// const MapComponent = ({ center, onLocationSelect, selectedLocation }) => {
+//   return (
+//     <MapContainer
+//       center={center}
+//       zoom={13}
+//       scrollWheelZoom={true}
+//       className="h-40 w-full rounded-lg border-2 border-gray-700"
+//     >
+//       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+//       <LocationPicker onLocationSelect={onLocationSelect} />
+//       <SearchControl onLocationSelect={onLocationSelect} />
+//       {selectedLocation && (
+//         <Marker
+//           position={[selectedLocation.lat, selectedLocation.lng]}
+//         ></Marker>
+//       )}
+//     </MapContainer>
+//   );
+// };
+
+const MapComponent = ({ solarCoordinates, setSolarCoordinates }) => {
+  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
+  const solarMarkerRef = useRef(null);
+
+  // Add a marker to the map
+  const addMarker = (lngLat, color, markerRef) => {
+    if (markerRef.current) markerRef.current.remove();
+    markerRef.current = new mapboxgl.Marker({ color })
+      .setLngLat(lngLat)
+      .addTo(mapRef.current);
+  };
 
   useEffect(() => {
-    const provider = new OpenStreetMapProvider();
-
-    const searchControl = new GeoSearchControl({
-      provider: provider,
-      style: "bar",
-      autoComplete: true,
-      autoCompleteDelay: 250,
-      showMarker: true,
-      showPopup: false,
-      marker: {
-        icon: new L.Icon.Default(),
-        draggable: false,
-      },
-      popupFormat: ({ query, result }) => result.label,
-      maxMarkers: 1,
-      retainZoomLevel: false,
-      animateZoom: true,
-      autoClose: true,
-      searchLabel: "Enter address",
-      keepResult: true,
+    mapRef.current = new mapboxgl.Map({
+      accessToken: MAPBOX_ACCESS_TOKEN,
+      container: mapContainerRef.current,
+      style: "mapbox://styles/mapbox/outdoors-v12",
+      center: [solarCoordinates.lng, solarCoordinates.lat],
+      zoom: 10,
     });
 
-    map.addControl(searchControl);
+    const geocoder = new MapboxGeocoder({
+      accessToken: MAPBOX_ACCESS_TOKEN,
+      mapboxgl: mapboxgl,
+      placeholder: "Enter address",
+    });
+    mapRef.current.addControl(geocoder, "top-left");
 
-    // Event listener for select the result
-    map.on("geosearch/showlocation", (e) => {
-      onLocationSelect({ lat: e.location.y, lng: e.location.x });
+    const navControl = new mapboxgl.NavigationControl({ showCompass: false });
+    mapRef.current.addControl(navControl, "top-right");
+
+    // Fly to new location when a search result is selected
+    geocoder.on("result", (e) => {
+      const newCoordinates = e.result.geometry.coordinates;
+      mapRef.current.flyTo({ center: newCoordinates });
+      setSolarCoordinates({ lng: newCoordinates[0], lat: newCoordinates[1] });
+      addMarker(newCoordinates, "#FF8C00", solarMarkerRef);
     });
 
-    return () => {
-      map.removeControl(searchControl);
-    };
-  }, [map, onLocationSelect]);
+    mapRef.current.on("load", () => {
+      // Add the initial solar marker
+      addMarker(
+        [solarCoordinates.lng, solarCoordinates.lat],
+        "#FF8C00",
+        solarMarkerRef
+      );
 
-  return null;
-};
+      // Add click event to place the solar marker
+      mapRef.current.on("click", (e) => {
+        const newCoordinates = e.lngLat;
+        setSolarCoordinates({
+          lng: newCoordinates.lng,
+          lat: newCoordinates.lat,
+        });
+        addMarker(newCoordinates, "#FF8C00", solarMarkerRef);
+      });
 
-const LocationPicker = ({ onLocationSelect, selectedLocation }) => {
-  const map = useMapEvents({
-    click(e) {
-      // Check if there's already a selected location from the search bar
-      if (!selectedLocation) {
-        const { lat, lng } = e.latlng;
-        onLocationSelect({ lat, lng });
-      }
-    },
-  });
+      mapRef.current.getCanvas().style.cursor = "pointer";
+    });
 
-  // No Popup component returned
-  return null;
-};
+    return () => mapRef.current.remove();
+  }, []);
 
-const MapComponent = ({ center, onLocationSelect, selectedLocation }) => {
   return (
-    <MapContainer
-      center={center}
-      zoom={13}
-      scrollWheelZoom={true}
-      className="h-40 w-full rounded-lg border-2 border-gray-700"
-    >
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      <LocationPicker onLocationSelect={onLocationSelect} />
-      <SearchControl onLocationSelect={onLocationSelect} />
-      {selectedLocation && (
-        <Marker
-          position={[selectedLocation.lat, selectedLocation.lng]}
-        ></Marker>
-      )}
-    </MapContainer>
+    <div
+      ref={mapContainerRef}
+      className="h-60 rounded-lg border-2 border-gray-700"
+    />
   );
 };
 
@@ -282,20 +363,9 @@ const SolarEnergyPage = ({
 
   return (
     <div className="h-screen p-6 py-0 overflow-auto transition duration-500 ease-in-out bg-gray-200">
-      {isLoading && (
-        <div
-          className="fixed top-1/2 left-0 right-0 z-50"
-          style={{ transform: "translateY(-50%)" }}
-        >
-          <div className="flex items-center justify-center">
-            <div
-              className="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-blue-600"
-              style={{ borderTopColor: "transparent" }}
-            ></div>
-          </div>
-        </div>
-      )}
-      <div className="max-w-md mx-auto text-gray-900">
+      {isLoading && <LoadingSpinnerMessage energy="Solar Energy" />}
+
+      <div className="w-[420px] mx-auto text-gray-900">
         <div className="flex justify-center">
           <h1 className="text-2xl font-bold p-6">Solar Energy Calculator</h1>
         </div>
@@ -303,10 +373,14 @@ const SolarEnergyPage = ({
         <section className="mb-6">
           <SectionTitle title="Location" />
           <div className="mb-4">
-            <MapComponent
+            {/* <MapComponent
               center={[location.lat, location.lng]}
               onLocationSelect={handleLocationSelect}
               selectedLocation={location}
+            /> */}
+            <MapComponent
+              solarCoordinates={location}
+              setSolarCoordinates={setLocation}
             />
           </div>
           <DisplayWithLabel
@@ -326,18 +400,21 @@ const SolarEnergyPage = ({
             <InputWithLabel
               label="Analysis Period (years)"
               id="analysisPeriod"
+              step={1}
               value={analysisPeriod}
               onChange={handleInputChange}
             />
             <InputWithLabel
               label="Interest (%)"
               id="interestRate"
+              step={0.01}
               value={interestRate}
               onChange={handleInputChange}
             />
             <InputWithLabel
               label="Cost of Electricity ($/kWh)"
               id="costOfEnergy"
+              step={0.01}
               value={costOfEnergy}
               onChange={handleInputChange}
             />
@@ -374,6 +451,7 @@ const SolarEnergyPage = ({
               label="Total Area (sq. m)"
               id="totalarea"
               value={totalarea}
+              step={1}
               onChange={(e) => setTotalarea(e.target.value)}
             />
           ) : (
@@ -381,6 +459,7 @@ const SolarEnergyPage = ({
               label="System Capacity (kWdc)"
               id="systemCapacity"
               value={systemCapacity}
+              step={1}
               onChange={(e) => setSystemCapacity(e.target.value)}
             />
           )}
@@ -396,6 +475,7 @@ const SolarEnergyPage = ({
             <InputWithLabel
               label="Cell Power (W)"
               id="cellPower"
+              step={1}
               value={cellPower}
               onChange={(e) => setCellPower(e.target.value)}
             />
@@ -404,6 +484,7 @@ const SolarEnergyPage = ({
               label="Cell Efficiency (%)"
               id="cellEfficiency"
               value={cellEfficiency}
+              step={0.1}
               onChange={(e) => setCellEfficiency(e.target.value)}
             />
 
@@ -411,6 +492,7 @@ const SolarEnergyPage = ({
               label="Tilt (°)"
               id="tilt"
               value={tilt}
+              step={1}
               onChange={(e) => setTilt(e.target.value)}
             />
 
@@ -418,6 +500,7 @@ const SolarEnergyPage = ({
               label="Inverter Efficiency (%)"
               id="inverterEfficiency"
               value={inverterEfficiency}
+              step={0.01}
               onChange={(e) => setInverterEfficiency(e.target.value)}
             />
 
@@ -425,16 +508,19 @@ const SolarEnergyPage = ({
               label="Electrical Losses (%)"
               id="electricalLosses"
               value={electricalLosses}
+              step={0.01}
               onChange={(e) => setElectricalLosses(e.target.value)}
             />
             <InputWithLabel
               label="Ground Coverage Ratio (%)"
               id="groundcoverage"
               value={groundcoverage}
+              step={0.1}
               onChange={(e) => setGroundcoverage(e.target.value)}
             />
           </div>
         </section>
+        <SectionDivider />
 
         <div className="sticky bottom-0 bg-gray-200 pt-3 pb-2 z-10">
           <button
