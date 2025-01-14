@@ -269,6 +269,7 @@ const SolarEnergyPage = ({
 
       // Handle the response accordingly
       setSolarCalcValues(response.data);
+      console.log({ solar: response.data });
     } catch (error) {
       console.error("Error during simulation:", error);
       // Handle error accordingly

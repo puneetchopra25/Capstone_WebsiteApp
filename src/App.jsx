@@ -13,19 +13,24 @@ import Windresultspage from "./pages/Windresultspage";
 import SolarResultsPage from "./pages/Solarresultspage";
 import { SectionDivider } from "./components/CommonComponents";
 import WelcomePage from "./pages/WelcomePage";
+import HydroResultsPage from "./pages/HydroResultspage";
 
 const App = () => {
+  // Wind Component States
   const [calculatedValues, setCalculatedValues] = useState(null);
   const [weibullPlotImage, setWeibullPlotImage] = useState("");
   const [powerCurvePlotImage, setPowerCurvePlotImage] = useState("");
   const [monthly_wind_energy, setMonthly_wind_energy] = useState("");
   const [range_plot_wind, setRange_plot_wind] = useState("");
+  // Solar Component States
   const [solarCalcValues, setSolarCalcValues] = useState(null);
   const [solarPlotImage, setSolarPlotImage] = useState("");
   const [cashflowPlotImage, setCashflowPlotImage] = useState("");
   const [omcostPlotImage, setOmcostPlotImage] = useState("");
   const [recieptPlotImage, setRecieptPlotImage] = useState("");
   const [systemCapacityOrArea, setSystemCapacityOrArea] = useState(false);
+  // Hydro Component States
+  const [hydroCalcValues, setHydroCalcValues] = useState(null);
 
   // const handleDownloadPdf = () => {
   //   // Logic to generate and download the PDF
@@ -121,6 +126,9 @@ const App = () => {
                 cashflowPlotImage={cashflowPlotImage}
               />
             )}
+            {hydroCalcValues && (
+              <HydroResultsPage hydroCalcValues={hydroCalcValues} />
+            )}
           </main>
         </div>
         <div className="mr-0">
@@ -142,7 +150,12 @@ const App = () => {
                   <WindEnergyPage setCalculatedValues={setCalculatedValues} />
                 }
               />
-              <Route path="/hydro-energy" element={<HydroEnergyPage />} />
+              <Route
+                path="/hydro-energy"
+                element={
+                  <HydroEnergyPage setHydroCalcValues={setHydroCalcValues} />
+                }
+              />
             </Routes>
           </main>
         </div>

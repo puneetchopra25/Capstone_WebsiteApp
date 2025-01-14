@@ -1,7 +1,8 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
+import axios from "axios";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import {
   SectionDivider,
@@ -271,7 +272,7 @@ const MapComponent = ({
   );
 };
 
-const HydroEnergyPage = () => {
+const HydroEnergyPage = ({ setHydroCalcValues }) => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
@@ -307,7 +308,12 @@ const HydroEnergyPage = () => {
   // cost paramaters
   const [analysisPeriod, setAnalysisPeriod] = useState(40);
   const [interestRate, setInterestRate] = useState(0.07);
-  const [costOfEnergy, setCostOfEnergy] = useState(0.11);
+  const [priceOfEnergy, setCostOfEnergy] = useState(0.11);
+
+  // Reset the calculated values when the component unmounts
+  useEffect(() => {
+    return () => setHydroCalcValues(null);
+  }, [setHydroCalcValues]);
 
   // Handle checkbox toggle to control custom flow rate
   const handleCustomFlowRateToggle = () => {
@@ -318,10 +324,17 @@ const HydroEnergyPage = () => {
   };
 
   const handleCustomEfficiencyToggle = () => {
-    setCustomEfficiency((prev) => !prev);
+    setCustomEfficiency((prev) => {
+      const newCustomEfficiency = !prev;
+      if (!newCustomEfficiency) {
+        // If custom efficiency is disabled, reset to initial efficiency (100)
+        setEfficiency(100);
+      }
+      return newCustomEfficiency;
+    });
   };
-
   // Handle the simulation logic - for now it just shows a loading spinner
+  /*
   const handleSimulation = () => {
     setIsLoading(true);
     console.log("Simulation Clicked");
@@ -329,6 +342,33 @@ const HydroEnergyPage = () => {
       setIsLoading(false);
     }, 5000);
   };
+*/
+
+  const handleSimulation = useCallback(async () => {
+    // Start the loading process
+    setIsLoading(true);
+    // reset hydro calculation values before new simulation
+    setHydroCalcValues(null);
+
+    try {
+      // Make a request to the backend to simulate the hydro energy --- for now sending temp values
+      const response = await axios.get("http://127.0.0.1:5000/ror", {
+        params: {
+          lat: -68.595832824707,
+          long: 47.2580604553223,
+          hydro_head: elevationDifference,
+        },
+      });
+
+      // Handle the response accordingly
+      setHydroCalcValues(response.data);
+      console.log({ response: response.data });
+    } catch (error) {
+      console.error("Error during simulation:", error);
+    }
+    // Stop the loading process
+    setIsLoading(false);
+  }, [riverCoordinates, elevationDifference, setHydroCalcValues]);
 
   return (
     <div className="h-screen bg-gray-200 px-6 py-0 overflow-auto transition duration-500 ease-in-out">
@@ -449,7 +489,7 @@ const HydroEnergyPage = () => {
           </section>
           <section className="mb-6">
             <SectionDivider />
-            <SectionTitle title="Cost Parameters" />
+            <SectionTitle title="Financial Parameters" />
             <div className="flex flex-col space-y-4">
               <InputWithLabel
                 label="Analysis period (years)"
@@ -466,9 +506,9 @@ const HydroEnergyPage = () => {
                 onChange={(e) => setInterestRate(e.target.value)}
               />
               <InputWithLabel
-                label="Cost of Electricity ($/kWh)"
-                id="costOfEnergy"
-                value={costOfEnergy}
+                label="Price of Electricity ($/kWh)"
+                id="priceOfEnergy"
+                value={priceOfEnergy}
                 step={0.01}
                 onChange={(e) => setCostOfEnergy(e.target.value)}
               />
