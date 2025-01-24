@@ -1,9 +1,32 @@
 import React from "react";
 import { Switch } from "@headlessui/react";
+import { Bar, Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  LineElement,
+  PointElement,
+} from "chart.js";
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 // Mapbox access token for the map
-export const MAPBOX_ACCESS_TOKEN =
-  "pk.eyJ1IjoibWJrLXViYyIsImEiOiJjbTJ3OG9rZHkwNDBvMnFwcGc2NGs4bDM4In0.yg9mzKihbe1zaJJnPWGQvA";
+export const MAPBOX_ACCESS_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
 // Creates a horizontal line as a section divider
 export const SectionDivider = () => (
@@ -157,3 +180,115 @@ export const LoadingSpinnerMessage = ({ energy }) => {
     </div>
   );
 };
+
+// Hydro Energy Chart Date Formatter
+const createEnergyChartData = (labels, label, data, type = "bar") => ({
+  labels,
+  datasets: [
+    {
+      type,
+      label,
+      data,
+      backgroundColor:
+        type === "bar" ? "rgba(13, 126, 201, 0.7)" : "rgba(13, 126, 201, 0.2)",
+      borderColor: "rgba(13, 126, 201, 0.7)",
+      borderWidth: 2,
+      fill: type === "line",
+      tension: 0.4,
+    },
+  ],
+});
+
+// Hydro Energy Chart Options
+const createEnergyChartOptions = (chartTitle, xAxisTitle, yAxisTitle) => ({
+  responsive: true,
+  plugins: {
+    title: {
+      display: true,
+      text: chartTitle,
+      font: {
+        size: 20,
+        weight: "bold",
+      },
+    },
+    legend: {
+      display: false, // Disable the legend
+    },
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      title: {
+        display: true,
+        text: yAxisTitle,
+        font: {
+          size: 16,
+          weight: "bold",
+        },
+      },
+    },
+    x: {
+      title: {
+        display: true,
+        text: xAxisTitle,
+        font: {
+          size: 16,
+          weight: "bold",
+        },
+      },
+    },
+  },
+});
+
+// Reusable Energy Plot Component
+export const ReusableEnergyPlot = ({
+  chartTitle,
+  xAxisTitle,
+  yAxisTitle,
+  labels,
+  label,
+  data,
+  type = "bar", // Default to bar chart
+}) => {
+  const chartOptions = createEnergyChartOptions(
+    chartTitle,
+    xAxisTitle,
+    yAxisTitle
+  );
+  const chartData = createEnergyChartData(labels, label, data, type);
+
+  // Dynamically render Line or Bar chart based on the type
+  return type === "line" ? (
+    <Line data={chartData} options={chartOptions} />
+  ) : (
+    <Bar data={chartData} options={chartOptions} />
+  );
+};
+
+// Turbine Selector Component
+export const TurbineSelector = ({
+  turbineModels,
+  onSelectTurbine,
+  selectedTurbineDetailsIndex,
+}) => (
+  <div className="flex items-center space-x-3 justify-center mb-4">
+    <label
+      htmlFor="turbine-selector"
+      className="block text-sm font-medium w-1/3"
+    >
+      Select Turbine:
+    </label>
+    <select
+      id="turbine-selector"
+      onChange={onSelectTurbine}
+      value={selectedTurbineDetailsIndex}
+      className="mt-1 w-2/3 p-2 border border-gray-700 rounded-3xl text-center bg-blue-500 text-white"
+    >
+      {turbineModels.map((turbine) => (
+        <option key={turbine.id} value={turbine.id}>
+          {turbine.name}
+        </option>
+      ))}
+    </select>
+  </div>
+);

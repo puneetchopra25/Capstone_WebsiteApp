@@ -31,6 +31,7 @@ const App = () => {
   const [systemCapacityOrArea, setSystemCapacityOrArea] = useState(false);
   // Hydro Component States
   const [hydroCalcValues, setHydroCalcValues] = useState(null);
+  const [hydroInputValues, setHydroInputValues] = useState(null);
 
   // const handleDownloadPdf = () => {
   //   // Logic to generate and download the PDF
@@ -127,7 +128,10 @@ const App = () => {
               />
             )}
             {hydroCalcValues && (
-              <HydroResultsPage hydroCalcValues={hydroCalcValues} />
+              <HydroResultsPage
+                hydroCalcValues={hydroCalcValues}
+                hydroInputValues={hydroInputValues}
+              />
             )}
           </main>
         </div>
@@ -153,7 +157,10 @@ const App = () => {
               <Route
                 path="/hydro-energy"
                 element={
-                  <HydroEnergyPage setHydroCalcValues={setHydroCalcValues} />
+                  <HydroEnergyPage
+                    setHydroCalcValues={setHydroCalcValues}
+                    setHydroInputValues={setHydroInputValues}
+                  />
                 }
               />
             </Routes>

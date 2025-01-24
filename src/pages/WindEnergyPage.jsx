@@ -19,6 +19,7 @@ import {
   InputWithLabel,
   MAPBOX_ACCESS_TOKEN,
   LoadingSpinnerMessage,
+  TurbineSelector,
 } from "../components/CommonComponents";
 
 // new map module
@@ -212,28 +213,6 @@ const turbineModels = [
   { id: 4, name: "Gamesa G97 2.0MW", ratedOutput: 2000, rotorDiameter: 97 },
 ];
 
-const TurbineSelector = ({ onSelectTurbine, selectedTurbineIndex }) => (
-  <div className="flex items-center space-x-3 justify-center mb-4">
-    <label
-      htmlFor="turbine-selector"
-      className="block text-sm font-medium w-1/3"
-    >
-      Select Turbine:
-    </label>
-    <select
-      id="turbine-selector"
-      onChange={onSelectTurbine}
-      value={selectedTurbineIndex}
-      className="mt-1 w-2/3 p-2 border border-gray-700 rounded-3xl text-center bg-blue-500 text-white"
-    >
-      {turbineModels.map((turbine) => (
-        <option key={turbine.id} value={turbine.id}>
-          {turbine.name}
-        </option>
-      ))}
-    </select>
-  </div>
-);
 const WindEnergyPage = ({ setCalculatedValues }) => {
   const [location, setLocation] = useState({
     lat: 49.387222,
@@ -437,6 +416,7 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
                 onSelectYear={(e) => setSelectedYear(e.target.value)}
               />
               <TurbineSelector
+                turbineModels={turbineModels}
                 onSelectTurbine={handleTurbineChange}
                 selectedTurbineIndex={selectedTurbineDetails.index}
               />

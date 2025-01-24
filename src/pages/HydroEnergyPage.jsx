@@ -13,6 +13,7 @@ import {
   Popup,
   LoadingSpinnerMessage,
   MAPBOX_ACCESS_TOKEN,
+  TurbineSelector,
 } from "../components/CommonComponents";
 
 const MapComponent = ({
@@ -272,7 +273,15 @@ const MapComponent = ({
   );
 };
 
-const HydroEnergyPage = ({ setHydroCalcValues }) => {
+// Turbine models for the dropdown selector
+const turbineModels = [
+  { id: 0, name: "Pelton Turbine" },
+  { id: 1, name: "Francis Turbine" },
+  { id: 2, name: "Kaplan Turbine" },
+];
+
+// Hydro Energy Page Component
+const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
@@ -304,6 +313,10 @@ const HydroEnergyPage = ({ setHydroCalcValues }) => {
   const [elevationWarningMessage, setElevationWarningMessage] = useState(null);
   const [efficiency, setEfficiency] = useState(100);
   const [customEfficiency, setCustomEfficiency] = useState(false);
+  const [selectedTurbineDetails, setSelectedTurbineDetails] = useState({
+    id: 0,
+    name: turbineModels[0].name,
+  });
 
   // cost paramaters
   const [analysisPeriod, setAnalysisPeriod] = useState(40);
@@ -333,42 +346,58 @@ const HydroEnergyPage = ({ setHydroCalcValues }) => {
       return newCustomEfficiency;
     });
   };
-  // Handle the simulation logic - for now it just shows a loading spinner
-  /*
-  const handleSimulation = () => {
-    setIsLoading(true);
-    console.log("Simulation Clicked");
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 5000);
+
+  // Handle the turbine change
+  const handleTurbineChange = (e) => {
+    // get the index of the selected turbine
+    const index = e.target.value;
+    const selectedTurbineDetails = turbineModels[index];
+    setSelectedTurbineDetails({
+      id: selectedTurbineDetails.id,
+      name: selectedTurbineDetails.name,
+    });
   };
-*/
 
   const handleSimulation = useCallback(async () => {
     // Start the loading process
     setIsLoading(true);
     // reset hydro calculation values before new simulation
     setHydroCalcValues(null);
-
+    // -68.595832824707
+    //47.2580604553223
     try {
       // Make a request to the backend to simulate the hydro energy --- for now sending temp values
       const response = await axios.get("http://127.0.0.1:5000/ror", {
         params: {
-          lat: -68.595832824707,
-          long: 47.2580604553223,
+          lat: riverCoordinates.lat,
+          long: riverCoordinates.lng,
           hydro_head: elevationDifference,
         },
       });
-
       // Handle the response accordingly
-      setHydroCalcValues(response.data);
-      console.log({ response: response.data });
+      // setHydroCalcValues(response.data);
+      setHydroCalcValues({
+        monthly_energy: response.data["energy_estimates"],
+        flow_rate: response.data["flowrate"],
+        hydro_head: elevationDifference,
+        efficiency: efficiency,
+      });
+      setHydroInputValues({
+        intakeCoordinates: riverCoordinates,
+        powerHouseCoordinates: landCoordinates,
+        turbine: selectedTurbineDetails.name,
+        density: 1000,
+        gravity: 9.81,
+        analysisPeriod: analysisPeriod,
+        interestRate: interestRate,
+        priceOfEnergy: priceOfEnergy,
+      });
     } catch (error) {
       console.error("Error during simulation:", error);
     }
     // Stop the loading process
     setIsLoading(false);
-  }, [riverCoordinates, elevationDifference, setHydroCalcValues]);
+  }, [riverCoordinates, elevationDifference]);
 
   return (
     <div className="h-screen bg-gray-200 px-6 py-0 overflow-auto transition duration-500 ease-in-out">
@@ -440,6 +469,12 @@ const HydroEnergyPage = ({ setHydroCalcValues }) => {
             <SectionDivider />
             <SectionTitle title="Hydro Parameters" />
             <div className="flex flex-col space-y-4">
+              {/* Turbine selector */}
+              <TurbineSelector
+                turbineModels={turbineModels}
+                onSelectTurbine={handleTurbineChange}
+                selectedTurbineDetailsIndex={selectedTurbineDetails.id}
+              />
               {/* Flow Rate section  */}
               <InputWithLabelAndSwitch
                 label="Flow Rate (m³/s)"
