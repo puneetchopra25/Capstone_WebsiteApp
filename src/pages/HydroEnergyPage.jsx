@@ -10,11 +10,11 @@ import {
   DisplayWithLabel,
   InputWithLabel,
   InputWithLabelAndSwitch,
-  Popup,
   LoadingSpinnerMessage,
-  MAPBOX_ACCESS_TOKEN,
   TurbineSelector,
+  RangeInputWithLabel,
 } from "../components/CommonComponents";
+import { MAPBOX_ACCESS_TOKEN } from "../utils/constants";
 
 const MapComponent = ({
   setRiverCoordinates,
@@ -23,8 +23,7 @@ const MapComponent = ({
   landCoordinates,
   setElevationDifference,
   setElevationWarningMessage,
-  setWarningMessage,
-  setShowPopup,
+  setSimulateButtonDisabled,
 }) => {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
@@ -37,31 +36,6 @@ const MapComponent = ({
     markerRef.current = new mapboxgl.Marker({ color })
       .setLngLat(lngLat)
       .addTo(mapRef.current);
-  };
-
-  // Function to calculate the distance between two coordinates
-  const haversineDistance = (coord1, coord2) => {
-    const toRadians = (degree) => (degree * Math.PI) / 180;
-    const earthRadius = 6371; // Radius of the Earth in kilometers
-
-    const dLat = toRadians(coord2.lat - coord1.lat);
-    const dLng = toRadians(coord2.lng - coord1.lng);
-
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(toRadians(coord1.lat)) *
-        Math.cos(toRadians(coord2.lat)) *
-        Math.sin(dLng / 2) *
-        Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    const distanceInKm = earthRadius * c; // Distance in kilometers
-    const distanceInM = distanceInKm * 1000; // Distance in meters
-
-    // Return distance with appropriate unit
-    return distanceInKm >= 1
-      ? `${distanceInKm.toFixed(3)} km` // Format for kilometers
-      : `${distanceInM.toFixed(3)} m`; // Format for meters
   };
 
   // Function to calculate the elevation gain - head
@@ -83,23 +57,11 @@ const MapComponent = ({
         setElevationWarningMessage(
           "Warning: Plant location must be at a lower elevation than intake location."
         );
+        setSimulateButtonDisabled(true);
       } else {
         setElevationWarningMessage(null);
+        setSimulateButtonDisabled(false);
       }
-    }
-  };
-
-  // Function to reset the markers and line layer
-  const resetMarkers = () => {
-    if (riverMarkerRef.current) riverMarkerRef.current.remove();
-    if (landMarkerRef.current) landMarkerRef.current.remove();
-    setRiverCoordinates(null);
-    setLandCoordinates(null);
-
-    // Reset the line layer if it exists
-    if (mapRef.current.getLayer("line-layer")) {
-      mapRef.current.removeLayer("line-layer");
-      mapRef.current.removeSource("line-source");
     }
   };
 
@@ -260,11 +222,6 @@ const MapComponent = ({
     }
   }, [riverCoordinates, landCoordinates]);
 
-  const distance =
-    riverCoordinates && landCoordinates
-      ? haversineDistance(riverCoordinates, landCoordinates)
-      : null;
-
   return (
     <div
       ref={mapContainerRef}
@@ -275,20 +232,16 @@ const MapComponent = ({
 
 // Turbine models for the dropdown selector
 const turbineModels = [
-  { id: 0, name: "Pelton Turbine" },
-  { id: 1, name: "Francis Turbine" },
-  { id: 2, name: "Kaplan Turbine" },
+  { id: 0, name: "Francis Turbine", efficiency: 93 },
+  { id: 1, name: "Pelton Turbine", efficiency: 88 },
+  { id: 2, name: "Kaplan Turbine", efficiency: 94 },
 ];
 
 // Hydro Energy Page Component
 const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
-  const [error, setError] = useState("");
+  const [simulateButtonDisabled, setSimulateButtonDisabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
-  const [warningMessage, setWarningMessage] = useState("");
   const [elevationDifference, setElevationDifference] = useState(null);
-  // const [riverCoordinates, setRiverCoordinates] = useState(null);
-  // const [landCoordinates, setLandCoordinates] = useState(null);
   const [riverCoordinates, setRiverCoordinates] = useState({
     // lng: -123.31499038595129,
     // lat: 49.93712452275511,
@@ -311,17 +264,16 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
   const [flowRate, setFlowRate] = useState(10);
   const [customFlowRate, setCustomFlowRate] = useState(false);
   const [elevationWarningMessage, setElevationWarningMessage] = useState(null);
-  const [efficiency, setEfficiency] = useState(100);
-  const [customEfficiency, setCustomEfficiency] = useState(false);
+  const [efficiency, setEfficiency] = useState(turbineModels[0].efficiency);
   const [selectedTurbineDetails, setSelectedTurbineDetails] = useState({
     id: 0,
     name: turbineModels[0].name,
+    efficiency: turbineModels[0].efficiency,
   });
 
-  // cost paramaters
-  const [analysisPeriod, setAnalysisPeriod] = useState(40);
-  const [interestRate, setInterestRate] = useState(0.07);
-  const [priceOfEnergy, setCostOfEnergy] = useState(0.11);
+  // Financial paramaters
+  const [analysisPeriod, setAnalysisPeriod] = useState(8);
+  const [discountRate, setDiscountRate] = useState(60);
 
   // Reset the calculated values when the component unmounts
   useEffect(() => {
@@ -336,17 +288,6 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
     // }
   };
 
-  const handleCustomEfficiencyToggle = () => {
-    setCustomEfficiency((prev) => {
-      const newCustomEfficiency = !prev;
-      if (!newCustomEfficiency) {
-        // If custom efficiency is disabled, reset to initial efficiency (100)
-        setEfficiency(100);
-      }
-      return newCustomEfficiency;
-    });
-  };
-
   // Handle the turbine change
   const handleTurbineChange = (e) => {
     // get the index of the selected turbine
@@ -355,18 +296,54 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
     setSelectedTurbineDetails({
       id: selectedTurbineDetails.id,
       name: selectedTurbineDetails.name,
+      efficiency: selectedTurbineDetails.efficiency,
     });
+    setEfficiency(selectedTurbineDetails.efficiency);
   };
+
+  // Handle turbine selection based on elevation
+  useEffect(() => {
+    if (elevationDifference !== null) {
+      // delay the turbine selection to ensure the elevation difference is loaded
+      const timeoutId = setTimeout(() => {
+        let selectedTurbine;
+        // if elevation difference is between 30 and 300, select Francis
+        if (elevationDifference <= 300 && elevationDifference >= 30) {
+          selectedTurbine = turbineModels[0];
+        }
+        // if elevation difference is less than 30, select Kaplan
+        else if (elevationDifference <= 30) {
+          selectedTurbine = turbineModels[2];
+        }
+        // if elevation difference is greater than 300, select Pelton
+        else {
+          selectedTurbine = turbineModels[1];
+        }
+
+        setSelectedTurbineDetails({
+          id: selectedTurbine.id,
+          name: selectedTurbine.name,
+          efficiency: selectedTurbine.efficiency,
+        });
+        setEfficiency(selectedTurbine.efficiency);
+      }, 200);
+
+      // Cleanup timeout on unmount or when elevationDifference changes
+      return () => clearTimeout(timeoutId);
+    }
+  }, [elevationDifference]);
 
   const handleSimulation = useCallback(async () => {
     // Start the loading process
     setIsLoading(true);
+    // diable simulate button when loading
+    setSimulateButtonDisabled(true);
     // reset hydro calculation values before new simulation
     setHydroCalcValues(null);
     // -68.595832824707
     //47.2580604553223
     try {
-      // Make a request to the backend to simulate the hydro energy --- for now sending temp values
+      // Make a request to the backend to simulate the hydro energy
       const response = await axios.get("http://127.0.0.1:5000/ror", {
         params: {
           lat: riverCoordinates.lat,
@@ -375,7 +352,6 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
         },
       });
       // Handle the response accordingly
-      // setHydroCalcValues(response.data);
       setHydroCalcValues({
         monthly_energy: response.data["energy_estimates"],
         flow_rate: response.data["flowrate"],
@@ -389,15 +365,34 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
         density: 1000,
         gravity: 9.81,
         analysisPeriod: analysisPeriod,
-        interestRate: interestRate,
-        priceOfEnergy: priceOfEnergy,
+        discountRate: discountRate,
       });
     } catch (error) {
       console.error("Error during simulation:", error);
     }
     // Stop the loading process
     setIsLoading(false);
-  }, [riverCoordinates, elevationDifference]);
+    setSimulateButtonDisabled(false);
+  }, [
+    setHydroCalcValues,
+    riverCoordinates,
+    elevationDifference,
+    efficiency,
+    setHydroInputValues,
+    landCoordinates,
+    selectedTurbineDetails.name,
+    analysisPeriod,
+    discountRate,
+  ]);
+
+  // Add useEffect to validate discount rate when it changes
+  useEffect(() => {
+    if (discountRate < 0 || discountRate > 100) {
+      setSimulateButtonDisabled(true);
+    } else {
+      setSimulateButtonDisabled(false);
+    }
+  }, [discountRate]);
 
   return (
     <div className="h-screen bg-gray-200 px-6 py-0 overflow-auto transition duration-500 ease-in-out">
@@ -421,9 +416,8 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
                 riverCoordinates={riverCoordinates}
                 landCoordinates={landCoordinates}
                 setElevationDifference={setElevationDifference}
-                setWarningMessage={setWarningMessage}
-                setShowPopup={setShowPopup}
                 setElevationWarningMessage={setElevationWarningMessage}
+                setSimulateButtonDisabled={setSimulateButtonDisabled}
               />
               {/* <MapComponent
                 // coordinates={coordinates}
@@ -431,12 +425,6 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
                 setWarningMessage={setWarningMessage}
                 setShowPopup={setShowPopup}
               /> */}
-              {showPopup && (
-                <Popup
-                  message={warningMessage}
-                  onClose={() => setShowPopup(false)}
-                />
-              )}
             </div>
             {elevationWarningMessage && (
               <div className="bg-red-100 rounded-2xl border-red-950 text-red-800 px-4 py-2 rounded relative mb-4">
@@ -465,6 +453,7 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
               value={landCoordinates?.lng?.toFixed(3)}
             />
           </section>
+          {/* Hydro Parameters section */}
           <section className="mb-6">
             <SectionDivider />
             <SectionTitle title="Hydro Parameters" />
@@ -502,26 +491,17 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
               {/*Gravity section*/}
               <DisplayWithLabel label="Gravity (m/s²)" value="9.81" />
               {/*Efficiency section*/}
-              <InputWithLabelAndSwitch
+              <RangeInputWithLabel
                 label="Efficiency (%)"
                 id="efficiency"
-                customMessage="Please enter a custom efficiency value (in %)."
-                historicalMessage="System will use the default efficiency of 100%. Toggle to enable custom efficiency."
                 value={efficiency}
-                onFlowChange={(e) => setEfficiency(e.target.value)}
                 onChange={(e) => setEfficiency(e.target.value)}
-                error={
-                  efficiency && isNaN(efficiency)
-                    ? "Please enter a valid number"
-                    : null
-                }
-                isChecked={customEfficiency}
-                onSwitchChange={handleCustomEfficiencyToggle}
+                min={0}
+                max={100}
               />
-
-              {/* <InputWithLabel label="XXXX" /> */}
             </div>
           </section>
+          {/* Financial Parameters section */}
           <section className="mb-6">
             <SectionDivider />
             <SectionTitle title="Financial Parameters" />
@@ -534,28 +514,34 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
                 onChange={(e) => setAnalysisPeriod(e.target.value)}
               />
               <InputWithLabel
-                label="Interest (%)"
-                id="interestRate"
-                value={interestRate}
-                step={0.01}
-                onChange={(e) => setInterestRate(e.target.value)}
-              />
-              <InputWithLabel
-                label="Price of Electricity ($/kWh)"
-                id="priceOfEnergy"
-                value={priceOfEnergy}
-                step={0.01}
-                onChange={(e) => setCostOfEnergy(e.target.value)}
+                label="Discount Rate (%)"
+                id="discountRate"
+                value={discountRate}
+                step={1}
+                min={0}
+                max={100}
+                onChange={(e) => setDiscountRate(e.target.value)}
+                error={
+                  discountRate &&
+                  (discountRate < 0 || discountRate > 100
+                    ? "Discount rate must be between 0 and 100"
+                    : null)
+                }
               />
             </div>
           </section>
+
           <SectionDivider />
 
           <div className="sticky bottom-0 bg-gray-200 pt-3 pb-2 z-10">
             <button
               onClick={handleSimulation}
-              className="w-full py-2 px-4 my-3 rounded-3xl font-bold bg-blue-500 hover:bg-blue-400 transition duration-500 ease-in-out text-white"
-              disabled={!!error}
+              className={`w-full py-2 px-4 my-3 rounded-3xl font-bold ${
+                simulateButtonDisabled
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-500 hover:bg-blue-400"
+              } transition duration-500 ease-in-out text-white`}
+              disabled={simulateButtonDisabled}
             >
               Simulate
             </button>

@@ -64,35 +64,35 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
   }, []);
 
   // old downloadPDF function
-  const downloadPDF = async () => {
-    if (contentRef.current) {
-      const contentWidth = contentRef.current.scrollWidth;
-      const contentHeight = contentRef.current.scrollHeight;
-      const canvas = await html2canvas(contentRef.current, {
-        scale: 2, // Adjusting scale might improve quality
-        width: contentWidth,
-        height: contentHeight,
-        useCORS: true,
-      });
+  // const downloadPDF = async () => {
+  //   if (contentRef.current) {
+  //     const contentWidth = contentRef.current.scrollWidth;
+  //     const contentHeight = contentRef.current.scrollHeight;
+  //     const canvas = await html2canvas(contentRef.current, {
+  //       scale: 2, // Adjusting scale might improve quality
+  //       width: contentWidth,
+  //       height: contentHeight,
+  //       useCORS: true,
+  //     });
 
-      // Get the aspect ratio of the content
-      const contentAspectRatio = contentWidth / contentHeight;
+  //     // Get the aspect ratio of the content
+  //     const contentAspectRatio = contentWidth / contentHeight;
 
-      // Create a PDF that matches the width and height of the content
-      const pdfWidth = 210; // A4 width in mm
-      const pdfHeight = pdfWidth / contentAspectRatio;
+  //     // Create a PDF that matches the width and height of the content
+  //     const pdfWidth = 210; // A4 width in mm
+  //     const pdfHeight = pdfWidth / contentAspectRatio;
 
-      const pdf = new jsPDF({
-        orientation: contentAspectRatio > 1 ? "landscape" : "portrait",
-        unit: "mm",
-        format: [pdfWidth, pdfHeight],
-      });
+  //     const pdf = new jsPDF({
+  //       orientation: contentAspectRatio > 1 ? "landscape" : "portrait",
+  //       unit: "mm",
+  //       format: [pdfWidth, pdfHeight],
+  //     });
 
-      const imgData = canvas.toDataURL("image/png");
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save("results_hydroEnergy.pdf");
-    }
-  };
+  //     const imgData = canvas.toDataURL("image/png");
+  //     pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+  //     pdf.save("results_hydroEnergy.pdf");
+  //   }
+  // };
 
   // Function to convert energy values to appropriate units (value is initially in MWh)
   function formatEnergyValue(value) {
@@ -116,7 +116,6 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
     (acc, curr) => acc + curr,
     0
   );
-
   // Calculate average monthly energy
   const averageMonthlyEnergy = annualHydroEnergy / 12;
 
@@ -225,18 +224,11 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
                 {hydroInputValues.analysisPeriod} years
               </Text>
             </View>
-            {/* Interest Rate */}
+            {/* Discount Rate */}
             <View style={documentStyles.tableRow}>
-              <Text style={documentStyles.tableCell}>Interest Rate</Text>
+              <Text style={documentStyles.tableCell}>Discount Rate</Text>
               <Text style={documentStyles.tableCell}>
-                {hydroInputValues.interestRate} %
-              </Text>
-            </View>
-            {/* Price of Energy */}
-            <View style={documentStyles.tableRow}>
-              <Text style={documentStyles.tableCell}>Price of Energy</Text>
-              <Text style={documentStyles.tableCell}>
-                {hydroInputValues.priceOfEnergy} $/kWh
+                {hydroInputValues.discountRate} %
               </Text>
             </View>
           </View>
@@ -283,20 +275,22 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
         <View style={documentStyles.section}>
           <Text style={documentStyles.subtitle}>Cost Results</Text>
           <View style={documentStyles.table}>
-            {/* Net Capital Cost */}
+            {/* Total Annual Cost */}
             <View style={documentStyles.tableRow}>
-              <Text style={documentStyles.tableCell}>Net Capital Cost</Text>
+              <Text style={documentStyles.tableCell}>Total Annual Cost</Text>
               <Text style={documentStyles.tableCell}>$100</Text>
             </View>
-            {/* Maintenance Cost */}
+            {/* Total Lifetime Cost */}
             <View style={documentStyles.tableRow}>
-              <Text style={documentStyles.tableCell}>Maintenance Cost</Text>
+              <Text style={documentStyles.tableCell}>Total Lifetime Cost</Text>
               <Text style={documentStyles.tableCell}>$100/year</Text>
             </View>
-            {/* Generation Revenue */}
+            {/* Levelized Cost of Energy */}
             <View style={documentStyles.tableRow}>
-              <Text style={documentStyles.tableCell}>Generation Revenue</Text>
-              <Text style={documentStyles.tableCell}>$100/year</Text>
+              <Text style={documentStyles.tableCell}>
+                Levelized Cost of Energy
+              </Text>
+              <Text style={documentStyles.tableCell}>$100 ($/kWh)</Text>
             </View>
             {/* Payback Period */}
             <View style={documentStyles.tableRow}>
@@ -397,33 +391,33 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
             </div>
             <div className="px-6 py-4">
               {/* Replace the following spans with your cost results */}
-              {/* Net Capital Cost */}
+              {/* Total Annual Cost */}
               <div className="mb-3">
                 <span className="text-base font-medium text-gray-600">
-                  Net Capital Cost:
+                  Total Annual Cost:
                 </span>
                 <span className="block font-semibold text-lg text-gray-800">
                   $ 100
                 </span>
               </div>
 
-              {/* Maintenance Cost */}
+              {/* Total Lifetime Cost */}
               <div className="mb-3">
                 <span className="text-base font-medium text-gray-600">
-                  Maintenance Cost:
+                  Total Lifetime Cost:
                 </span>
                 <span className="block font-semibold text-lg text-gray-800">
                   $ {100} / year
                 </span>
               </div>
 
-              {/* Generation Revenue */}
+              {/* Levelized Cost of Energy */}
               <div className="mb-3">
                 <span className="text-base font-medium text-gray-600">
-                  Generation Revenue:
+                  Levelized Cost of Energy:
                 </span>
                 <span className="block font-semibold text-lg text-gray-800">
-                  $ {100} / year
+                  $ {100} ($/kWh)
                 </span>
               </div>
 

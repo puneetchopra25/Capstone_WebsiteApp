@@ -17,10 +17,10 @@ import {
   SectionTitle,
   DisplayWithLabel,
   InputWithLabel,
-  MAPBOX_ACCESS_TOKEN,
   LoadingSpinnerMessage,
   TurbineSelector,
 } from "../components/CommonComponents";
+import { MAPBOX_ACCESS_TOKEN } from "../utils/constants";
 
 // new map module
 import mapboxgl from "mapbox-gl";

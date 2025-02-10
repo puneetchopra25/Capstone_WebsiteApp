@@ -1,4 +1,3 @@
-import React from "react";
 import { Switch } from "@headlessui/react";
 import { Bar, Line } from "react-chartjs-2";
 import {
@@ -12,6 +11,10 @@ import {
   LineElement,
   PointElement,
 } from "chart.js";
+import {
+  createEnergyChartData,
+  createEnergyChartOptions,
+} from "../utils/chartUtils";
 
 // Register ChartJS components
 ChartJS.register(
@@ -24,9 +27,6 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-
-// Mapbox access token for the map
-export const MAPBOX_ACCESS_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
 // Creates a horizontal line as a section divider
 export const SectionDivider = () => (
@@ -54,20 +54,33 @@ export const DisplayWithLabel = ({ label, value }) => (
 );
 
 // Creates an input with a label and value
-export const InputWithLabel = ({ label, id, value, onChange, step, error }) => (
-  <div className="flex items-center space-x-3 ">
-    <label htmlFor={id} className="block text-sm font-medium w-1/3">
-      {label}
-    </label>
-    <input
-      type="number"
-      id={id}
-      value={value}
-      step={step}
-      onChange={onChange}
-      className="mt-1 block w-full max-w-[65%] h-15 p-2 border border-gray-700 rounded-3xl text-center"
-    />
-    {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+export const InputWithLabel = ({
+  label,
+  id,
+  value,
+  onChange,
+  step,
+  error,
+  min,
+  max,
+}) => (
+  <div className="flex flex-col">
+    <div className="flex items-center space-x-3">
+      <label htmlFor={id} className="block text-sm font-medium w-1/3">
+        {label}
+      </label>
+      <input
+        type="number"
+        id={id}
+        value={value}
+        step={step}
+        min={min}
+        max={max}
+        onChange={onChange}
+        className="mt-1 block w-full max-w-[65%] h-15 p-2 border border-gray-700 rounded-3xl text-center"
+      />
+    </div>
+    {error && <p className="text-xs text-red-500 mt-1 ml-[35%]">{error}</p>}
   </div>
 );
 
@@ -83,8 +96,6 @@ export const InputWithLabelAndSwitch = ({
   isChecked,
   onSwitchChange,
 }) => {
-  // Check if the id is "efficiency" to set min and max
-  const isEfficiency = id === "efficiency";
   return (
     <div className="flex flex-col space-y-3">
       <div className="flex items-center space-x-3">
@@ -109,35 +120,45 @@ export const InputWithLabelAndSwitch = ({
       </p>
       {isChecked && (
         <div className="flex justify-end items-center space-x-3">
-          {isEfficiency ? (
-            // Range input for "efficiency"
-            <>
-              <input
-                type="range"
-                id="efficiency"
-                min={0}
-                max={100}
-                value={value}
-                onChange={onChange}
-                className="mt-1 block w-full max-w-[60%] h-2 bg-gray-700 rounded-full cursor-pointer"
-              />
-              <span className="ml-3 text-sm font-medium">{value}</span>
-            </>
-          ) : (
-            // Regular number input for other cases
-            <input
-              type="number"
-              id={id}
-              min={0}
-              value={value}
-              onChange={onChange}
-              className="mt-1 block w-full max-w-[65%] h-15 p-2 border border-gray-700 rounded-3xl flex justify-end text-center"
-            />
-          )}
+          <input
+            type="number"
+            id={id}
+            min={0}
+            value={value}
+            onChange={onChange}
+            className="mt-1 block w-full max-w-[65%] h-15 p-2 border border-gray-700 rounded-3xl flex justify-end text-center"
+          />
         </div>
       )}
 
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    </div>
+  );
+};
+
+export const RangeInputWithLabel = ({
+  label,
+  id,
+  value,
+  onChange,
+  min,
+  max,
+}) => {
+  return (
+    <div className="flex items-center space-x-3">
+      <label htmlFor={id} className="block text-sm font-medium w-5/6">
+        {label}
+      </label>
+      <input
+        type="range"
+        id={id}
+        min={min}
+        max={max}
+        value={value}
+        onChange={onChange}
+        className="mt-1 block w-full max-w-[60%] h-2 bg-gray-700 rounded-full cursor-pointer"
+      />
+      <span className="ml-3 text-sm font-medium">{value}</span>
     </div>
   );
 };
@@ -180,65 +201,6 @@ export const LoadingSpinnerMessage = ({ energy }) => {
     </div>
   );
 };
-
-// Hydro Energy Chart Date Formatter
-const createEnergyChartData = (labels, label, data, type = "bar") => ({
-  labels,
-  datasets: [
-    {
-      type,
-      label,
-      data,
-      backgroundColor:
-        type === "bar" ? "rgba(13, 126, 201, 0.7)" : "rgba(13, 126, 201, 0.2)",
-      borderColor: "rgba(13, 126, 201, 0.7)",
-      borderWidth: 2,
-      fill: type === "line",
-      tension: 0.4,
-    },
-  ],
-});
-
-// Hydro Energy Chart Options
-const createEnergyChartOptions = (chartTitle, xAxisTitle, yAxisTitle) => ({
-  responsive: true,
-  plugins: {
-    title: {
-      display: true,
-      text: chartTitle,
-      font: {
-        size: 20,
-        weight: "bold",
-      },
-    },
-    legend: {
-      display: false, // Disable the legend
-    },
-  },
-  scales: {
-    y: {
-      beginAtZero: true,
-      title: {
-        display: true,
-        text: yAxisTitle,
-        font: {
-          size: 16,
-          weight: "bold",
-        },
-      },
-    },
-    x: {
-      title: {
-        display: true,
-        text: xAxisTitle,
-        font: {
-          size: 16,
-          weight: "bold",
-        },
-      },
-    },
-  },
-});
 
 // Reusable Energy Plot Component
 export const ReusableEnergyPlot = ({

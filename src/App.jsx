@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Wind, Sun, Settings, LifeBuoy, Waves } from "lucide-react";
+import { Wind, Sun, Waves } from "lucide-react";
 import Sidebar, { SidebarItem } from "./components/Sidebar";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 // import { pdfjs, Document, Page } from 'react-pdf';
