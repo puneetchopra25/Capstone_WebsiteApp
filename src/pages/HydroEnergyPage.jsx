@@ -349,14 +349,31 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
           lat: riverCoordinates.lat,
           long: riverCoordinates.lng,
           hydro_head: elevationDifference,
+          period: analysisPeriod,
+          discount_rate: discountRate,
+          turbine: selectedTurbineDetails.name,
         },
       });
+
       // Handle the response accordingly
       setHydroCalcValues({
-        monthly_energy: response.data["energy_estimates"],
+        // cost values
+        annual_cost: response.data["annual_cost"],
+        levelized_cost: response.data["levelized_cost"],
+        lifetime_cost: response.data["life_time_cost"],
+        total_investment: response.data["total_investment"],
+        annual_npv_cost: response.data["annual_npv_cost"],
+        // energy values
+        monthly_energy_mwh: response.data["monthly_energy_mwh"],
+        annual_energy_mwh: response.data["annual_energy_mwh"],
+        capacity_mw: response.data["capacity_mw"],
         flow_rate: response.data["flowrate"],
         hydro_head: elevationDifference,
         efficiency: efficiency,
+
+        // site information
+        site_link: response.data["site_link"],
+        site_no: response.data["site_no"],
       });
       setHydroInputValues({
         intakeCoordinates: riverCoordinates,

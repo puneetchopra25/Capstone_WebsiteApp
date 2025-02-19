@@ -269,7 +269,7 @@ const SolarEnergyPage = ({
 
       // Handle the response accordingly
       setSolarCalcValues(response.data);
-      console.log({ solar: response.data });
+      // console.log({ solar: response.data });
     } catch (error) {
       console.error("Error during simulation:", error);
       // Handle error accordingly
@@ -350,15 +350,15 @@ const SolarEnergyPage = ({
     }
   }, []);
 
-  console.log("Current Toggle State:", systemCapacityOrArea);
+  // console.log("Current Toggle State:", systemCapacityOrArea);
 
   const toggleSystemCapacityOrArea = () => {
-    console.log(
-      "Toggling from:",
-      systemCapacityOrArea,
-      "to:",
-      !systemCapacityOrArea
-    );
+    // console.log(
+    //   "Toggling from:",
+    //   systemCapacityOrArea,
+    //   "to:",
+    //   !systemCapacityOrArea
+    // );
     setSystemCapacityOrArea(!systemCapacityOrArea); // This should toggle the state
   };
 

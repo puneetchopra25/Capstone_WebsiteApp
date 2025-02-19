@@ -15,6 +15,7 @@ import {
   createEnergyChartData,
   createEnergyChartOptions,
 } from "../utils/chartUtils";
+import React, { useMemo } from "react";
 
 // Register ChartJS components
 ChartJS.register(
@@ -202,30 +203,56 @@ export const LoadingSpinnerMessage = ({ energy }) => {
   );
 };
 
-// Reusable Energy Plot Component
-export const ReusableEnergyPlot = ({
-  chartTitle,
-  xAxisTitle,
-  yAxisTitle,
-  labels,
-  label,
-  data,
-  type = "bar", // Default to bar chart
-}) => {
-  const chartOptions = createEnergyChartOptions(
+// export const LoadingPlotSpinner = () => {
+//   return (
+//     <div className="flex flex-col justify-center items-center p-12 space-y-4">
+//       <div className="relative">
+//         {/* Outer ring */}
+//         <div className="w-16 h-16 border-4 border-blue-100 rounded-full"></div>
+//         {/* Inner spinning ring */}
+//         <div className="absolute top-0 left-0 w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+//       </div>
+//       {/* Loading text */}
+//       <div className="text-center">
+//         <p className="text-gray-700 font-medium">Loading graphs</p>
+//         <p className="text-sm text-gray-500">
+//           Please wait while we generate the plots
+//         </p>
+//       </div>
+//     </div>
+//   );
+// };
+
+// Memoize the ReusableEnergyPlot component
+export const ReusableEnergyPlot = React.memo(
+  ({
     chartTitle,
     xAxisTitle,
-    yAxisTitle
-  );
-  const chartData = createEnergyChartData(labels, label, data, type);
+    yAxisTitle,
+    labels,
+    label,
+    data,
+    type = "bar",
+  }) => {
+    const chartOptions = useMemo(
+      () => createEnergyChartOptions(chartTitle, xAxisTitle, yAxisTitle),
+      [chartTitle, xAxisTitle, yAxisTitle]
+    );
 
-  // Dynamically render Line or Bar chart based on the type
-  return type === "line" ? (
-    <Line data={chartData} options={chartOptions} />
-  ) : (
-    <Bar data={chartData} options={chartOptions} />
-  );
-};
+    const chartData = useMemo(
+      () => createEnergyChartData(labels, label, data, type),
+      [labels, label, data, type]
+    );
+
+    return type === "line" ? (
+      <Line data={chartData} options={chartOptions} />
+    ) : (
+      <Bar data={chartData} options={chartOptions} />
+    );
+  }
+);
+
+ReusableEnergyPlot.displayName = "ReusableEnergyPlot";
 
 // Turbine Selector Component
 export const TurbineSelector = ({
