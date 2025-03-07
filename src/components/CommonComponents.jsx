@@ -54,6 +54,15 @@ export const DisplayWithLabel = ({ label, value }) => (
   </div>
 );
 
+// Creates a label with a message
+export const LabelWithMessage = ({ label, message }) => (
+  <div className="flex flex-col space-y-3">
+    <div className="flex items-center space-x-3">
+      <label className="block text-sm font-medium w-5/6">{label}</label>
+    </div>
+    <p className="text-sm text-gray-500 mt-1">{message}</p>
+  </div>
+);
 // Creates an input with a label and value
 export const InputWithLabel = ({
   label,
@@ -84,58 +93,6 @@ export const InputWithLabel = ({
     {error && <p className="text-xs text-red-500 mt-1 ml-[35%]">{error}</p>}
   </div>
 );
-
-// Input with label and switch  to enable/disable input
-export const InputWithLabelAndSwitch = ({
-  label,
-  id,
-  value,
-  customMessage,
-  historicalMessage,
-  onChange,
-  error,
-  isChecked,
-  onSwitchChange,
-}) => {
-  return (
-    <div className="flex flex-col space-y-3">
-      <div className="flex items-center space-x-3">
-        <label htmlFor={id} className="block text-sm font-medium w-5/6">
-          {label}
-        </label>
-        <Switch
-          checked={isChecked}
-          onChange={onSwitchChange} // Toggle the switch state
-          className={`${isChecked ? "bg-blue-600" : "bg-gray-400"} 
-                      relative inline-flex items-center h-6 rounded-full w-11`}
-        >
-          <span
-            aria-hidden="true"
-            className={`${isChecked ? "translate-x-6" : "translate-x-1"} 
-                        inline-block w-4 h-4 transform bg-white rounded-full`}
-          />
-        </Switch>
-      </div>
-      <p className="text-sm text-gray-500 mt-1">
-        {isChecked ? customMessage : historicalMessage}
-      </p>
-      {isChecked && (
-        <div className="flex justify-end items-center space-x-3">
-          <input
-            type="number"
-            id={id}
-            min={0}
-            value={value}
-            onChange={onChange}
-            className="mt-1 block w-full max-w-[65%] h-15 p-2 border border-gray-700 rounded-3xl flex justify-end text-center"
-          />
-        </div>
-      )}
-
-      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-    </div>
-  );
-};
 
 export const RangeInputWithLabel = ({
   label,

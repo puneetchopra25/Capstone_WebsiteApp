@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
@@ -9,10 +9,10 @@ import {
   SectionTitle,
   DisplayWithLabel,
   InputWithLabel,
-  InputWithLabelAndSwitch,
   LoadingSpinnerMessage,
   TurbineSelector,
   RangeInputWithLabel,
+  LabelWithMessage,
 } from "../components/CommonComponents";
 import { MAPBOX_ACCESS_TOKEN } from "../utils/constants";
 
@@ -232,9 +232,9 @@ const MapComponent = ({
 
 // Turbine models for the dropdown selector
 const turbineModels = [
-  { id: 0, name: "Francis Turbine", efficiency: 93 },
-  { id: 1, name: "Pelton Turbine", efficiency: 88 },
-  { id: 2, name: "Kaplan Turbine", efficiency: 94 },
+  { id: 0, code: "FRC", name: "Francis Turbine", efficiency: 93 },
+  { id: 1, code: "PLT", name: "Pelton Turbine", efficiency: 88 },
+  { id: 2, code: "KPL", name: "Kaplan Turbine", efficiency: 94 },
 ];
 
 // Hydro Energy Page Component
@@ -261,12 +261,11 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
     lat: 49.914,
   });
 
-  const [flowRate, setFlowRate] = useState(10);
-  const [customFlowRate, setCustomFlowRate] = useState(false);
   const [elevationWarningMessage, setElevationWarningMessage] = useState(null);
   const [efficiency, setEfficiency] = useState(turbineModels[0].efficiency);
   const [selectedTurbineDetails, setSelectedTurbineDetails] = useState({
-    id: 0,
+    id: turbineModels[0].id,
+    code: turbineModels[0].code,
     name: turbineModels[0].name,
     efficiency: turbineModels[0].efficiency,
   });
@@ -280,14 +279,6 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
     return () => setHydroCalcValues(null);
   }, [setHydroCalcValues]);
 
-  // Handle checkbox toggle to control custom flow rate
-  const handleCustomFlowRateToggle = () => {
-    setCustomFlowRate((prev) => !prev);
-    // if (customFlowRate) {
-    //   setFlowRate(10); // Reset flow rate to default value
-    // }
-  };
-
   // Handle the turbine change
   const handleTurbineChange = (e) => {
     // get the index of the selected turbine
@@ -295,6 +286,7 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
     const selectedTurbineDetails = turbineModels[index];
     setSelectedTurbineDetails({
       id: selectedTurbineDetails.id,
+      code: selectedTurbineDetails.code,
       name: selectedTurbineDetails.name,
       efficiency: selectedTurbineDetails.efficiency,
     });
@@ -322,6 +314,7 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
 
         setSelectedTurbineDetails({
           id: selectedTurbine.id,
+          code: selectedTurbine.code,
           name: selectedTurbine.name,
           efficiency: selectedTurbine.efficiency,
         });
@@ -346,12 +339,16 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
       // Make a request to the backend to simulate the hydro energy
       const response = await axios.get("http://127.0.0.1:5000/ror", {
         params: {
-          lat: riverCoordinates.lat,
-          long: riverCoordinates.lng,
           hydro_head: elevationDifference,
           period: analysisPeriod,
           discount_rate: discountRate,
-          turbine: selectedTurbineDetails.name,
+          d_penstock: 10,
+          v_penstock: 1.2,
+          turbine: selectedTurbineDetails.code,
+          lat: riverCoordinates.lat,
+          long: riverCoordinates.lng,
+          head_loss: 0.05,
+          eco_flow: 0.1,
         },
       });
 
@@ -367,10 +364,10 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
         monthly_energy_mwh: response.data["monthly_energy_mwh"],
         annual_energy_mwh: response.data["annual_energy_mwh"],
         capacity_mw: response.data["capacity_mw"],
-        flow_rate: response.data["flowrate"],
+        intake_flowrate: response.data["intake_flowrate"],
+        river_flowrate: response.data["river_flowrate"],
         hydro_head: elevationDifference,
         efficiency: efficiency,
-
         // site information
         site_link: response.data["site_link"],
         site_no: response.data["site_no"],
@@ -392,14 +389,15 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
     setSimulateButtonDisabled(false);
   }, [
     setHydroCalcValues,
-    riverCoordinates,
     elevationDifference,
+    analysisPeriod,
+    discountRate,
+    selectedTurbineDetails.code,
+    selectedTurbineDetails.name,
+    riverCoordinates,
     efficiency,
     setHydroInputValues,
     landCoordinates,
-    selectedTurbineDetails.name,
-    analysisPeriod,
-    discountRate,
   ]);
 
   // Add useEffect to validate discount rate when it changes
@@ -481,21 +479,11 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
                 onSelectTurbine={handleTurbineChange}
                 selectedTurbineDetailsIndex={selectedTurbineDetails.id}
               />
+
               {/* Flow Rate section  */}
-              <InputWithLabelAndSwitch
+              <LabelWithMessage
                 label="Flow Rate (m³/s)"
-                id="flowRate"
-                customMessage="Please enter a custom flow rate value."
-                historicalMessage="System will use historical flow rate based on the selected coordinates. Toggle to enable custom flow rate."
-                value={flowRate}
-                onChange={(e) => setFlowRate(e.target.value)}
-                error={
-                  flowRate && isNaN(flowRate)
-                    ? "Please enter a valid number"
-                    : null
-                }
-                isChecked={customFlowRate}
-                onSwitchChange={handleCustomFlowRateToggle}
+                message="System will use historical flow rate based on the selected coordinates."
               />
 
               {/* Elevation difference (Head) section */}

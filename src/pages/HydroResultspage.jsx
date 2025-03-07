@@ -39,28 +39,50 @@ const documentStyles = StyleSheet.create({
 
 const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
   const contentRef = useRef(null); // Create a ref for the content
-  const hydroPlotRef = useRef(null); // Create a ref for the monthly energy chart
-  const [hydroPlotImage, sethydroPlotImage] = useState(null);
+  const financialPlotsRef = useRef(null); // Ref for all financial plots
+  const costPlotRef = useRef(null); // Ref for cost plot
+
+  const [financialPlotsImage, setFinancialPlotsImage] = useState(null);
+  const [costPlotImage, setCostPlotImage] = useState(null);
   const [isDocumentReady, setIsDocumentReady] = useState(false);
+
+  // Site information - This would come from your API or props in a real implementation
+  const siteInfo = {
+    site_link: hydroCalcValues.site_link,
+    site_no: hydroCalcValues.site_no,
+  };
 
   // console.log({ hydroCalcValues: hydroCalcValues });
 
   useEffect(() => {
-    // Capture the chart after a delay to ensure it is fully rendered
-    const captureChart = async () => {
-      if (hydroPlotRef.current) {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        const canvas = await html2canvas(hydroPlotRef.current, {
+    // Capture charts after a delay to ensure they are fully rendered
+    const captureCharts = async () => {
+      // Wait for charts to render
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Capture all financial plots together
+      if (financialPlotsRef.current) {
+        const canvas = await html2canvas(financialPlotsRef.current, {
           useCORS: true,
           scale: 3,
         });
-        const image = canvas.toDataURL("image/png");
-        sethydroPlotImage(image);
-        setIsDocumentReady(true);
+        setFinancialPlotsImage(canvas.toDataURL("image/png"));
       }
+
+      // Capture cost plot
+      if (costPlotRef.current) {
+        const canvas = await html2canvas(costPlotRef.current, {
+          useCORS: true,
+          scale: 3,
+        });
+        setCostPlotImage(canvas.toDataURL("image/png"));
+      }
+
+      // Set document as ready when all charts are captured
+      setIsDocumentReady(true);
     };
 
-    captureChart();
+    captureCharts();
   }, []);
 
   // Function to convert energy values to appropriate units (value is initially in MWh)
@@ -151,8 +173,6 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
     }
   }
 
-  // f
-
   // Format data for the bar plot
   const { formattedData, unit } = formatEnergyBarPlotUnits(
     hydroCalcValues.monthly_energy_mwh
@@ -167,7 +187,7 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
   // console.log("Hydro Input Values:", hydroInputValues);
 
   // Create a PDF document
-  const MyDocument = ({ hydroPlotImage }) => (
+  const MyDocument = () => (
     <Document>
       {/* Page 1 */}
       <Page size="A4" style={documentStyles.page}>
@@ -175,6 +195,7 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
           Hydro Energy and Cost Analysis Report
         </Text>
 
+        {/* Input Parameters */}
         <View style={documentStyles.section}>
           <Text style={documentStyles.subtitle}>Input Parameters</Text>
           <View style={documentStyles.table}>
@@ -263,7 +284,7 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
             <View style={documentStyles.tableRow}>
               <Text style={documentStyles.tableCell}>Head</Text>
               <Text style={documentStyles.tableCell}>
-                {hydroCalcValues.hydro_head.toFixed(3)} m
+                {Math.round(hydroCalcValues.hydro_head)} m
               </Text>
             </View>
             {/* Efficiency */}
@@ -291,7 +312,7 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
             <View style={documentStyles.tableRow}>
               <Text style={documentStyles.tableCell}>Total Lifetime Cost</Text>
               <Text style={documentStyles.tableCell}>
-                $ {formattedLifetimeCost} / year
+                $ {formattedLifetimeCost}
               </Text>
             </View>
             {/* Total Investment */}
@@ -314,21 +335,30 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
         </View>
       </Page>
 
-      {/* Page 2 - Graphs */}
+      {/* Page 2 - Financial Plots (Monthly Energy, River Flow Rate, Intake Flow Rate) */}
       <Page size="A4" style={documentStyles.page}>
-        <Text style={documentStyles.subtitle}>Graphical Analysis</Text>
-        {hydroPlotImage ? (
-          <Image style={documentStyles.graph} src={hydroPlotImage} />
+        <Text style={documentStyles.subtitle}>
+          Graphical Financial Analysis
+        </Text>
+
+        {financialPlotsImage ? (
+          <Image style={documentStyles.graph} src={financialPlotsImage} />
         ) : (
-          <Text>Graph not available</Text>
+          <Text style={{ textAlign: "center" }}>
+            Financial plots not available
+          </Text>
         )}
-        {/* {hydroCalcValues && (
-          <Image
-            src={placeholderEnergy}
-            alt="Power Curve"
-            className="max-w-full h-auto"
-          />
-        )} */}
+      </Page>
+
+      {/* Page 3 - Cost Plot (Annual NPV Cost) */}
+      <Page size="A4" style={documentStyles.page}>
+        <Text style={documentStyles.subtitle}>Graphical Cost Analysis</Text>
+
+        {costPlotImage ? (
+          <Image style={documentStyles.graph} src={costPlotImage} />
+        ) : (
+          <Text style={{ textAlign: "center" }}>Cost plot not available</Text>
+        )}
       </Page>
     </Document>
   );
@@ -344,11 +374,35 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
         className="py-8 px-4 mx-auto max-w-7xl"
         style={{ maxHeight: "calc(113vh - 100px)", overflowY: "scroll" }}
       >
-        {/* Top section with Calculation Results, Cost Results and Download PDF button */}
+        {/* PDF Download button in top right corner */}
+        <div className="flex justify-end mb-4">
+          <div
+            className={`flex items-center py-2 px-4 ${
+              isDocumentReady
+                ? "bg-blue-600 hover:bg-blue-700 cursor-pointer"
+                : "bg-gray-400 cursor-not-allowed pointer-events-none"
+            } text-white rounded-3xl transition duration-300 ease-in-out text-base shadow-lg`}
+          >
+            {isDocumentReady ? (
+              <PDFDownloadLink
+                document={<MyDocument />}
+                fileName="results_HydroEnergy.pdf"
+                className="flex items-center"
+              >
+                Download PDF
+                <FileText className="ml-2 w-5 h-5" />
+              </PDFDownloadLink>
+            ) : (
+              <span className="flex items-center">
+                Download PDF
+                <FileText className="ml-2 w-5 h-5" />
+              </span>
+            )}
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           {" "}
-          {/* Grid layout for medium devices and up */}
           {/* Calculation Results */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden col-span-1">
             <div className="bg-gray-200 px-5 py-3">
@@ -357,8 +411,6 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
               </h3>
             </div>
             <div className="px-6 py-4">
-              {/* Replace the following spans with your calculated values */}
-
               {/* Annual Energy */}
               <div className="mb-3">
                 <span className="text-base font-medium text-gray-600">
@@ -395,7 +447,7 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
                   Head:
                 </span>
                 <span className="block font-semibold text-lg text-gray-800">
-                  {hydroCalcValues.hydro_head.toFixed(3)} m
+                  {Math.round(hydroCalcValues.hydro_head)} m
                 </span>
               </div>
 
@@ -434,7 +486,7 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
                   Total Lifetime Cost:
                 </span>
                 <span className="block font-semibold text-lg text-gray-800">
-                  $ {formattedLifetimeCost} / year
+                  $ {formattedLifetimeCost}
                 </span>
               </div>
 
@@ -459,30 +511,39 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
               </div>
             </div>
           </div>
-          {/* Download PDF button */}
-          <div className="col-span-1 flex justify-end items-start">
-            <div
-              className={`flex items-center py-2 px-4 ${
-                isDocumentReady && hydroPlotImage
-                  ? "bg-blue-600 hover:bg-blue-700 cursor-pointer"
-                  : "bg-gray-400 cursor-not-allowed pointer-events-none"
-              } text-white rounded-3xl transition duration-300 ease-in-out text-base shadow-lg`}
-            >
-              {isDocumentReady && hydroPlotImage ? (
-                <PDFDownloadLink
-                  document={<MyDocument hydroPlotImage={hydroPlotImage} />}
-                  fileName="results_HydroEnergy.pdf"
-                  className="flex items-center"
-                >
-                  Download PDF
-                  <FileText className="ml-2 w-5 h-5" />
-                </PDFDownloadLink>
-              ) : (
-                <span className="flex items-center">
-                  Download PDF
-                  <FileText className="ml-2 w-5 h-5" />
+          {/* Station Information */}
+          <div className="bg-white rounded-lg shadow-md overflow-hidden col-span-1 h-64">
+            <div className="bg-gray-200 px-5 py-3">
+              <h3 className="text-xl font-bold text-gray-800 text-center">
+                Station Information
+              </h3>
+            </div>
+            <div className="px-6 py-3">
+              <div className="mb-2">
+                <span className="text-base font-medium text-gray-600">
+                  Station Number:
                 </span>
-              )}
+                <span className="block font-semibold text-lg text-gray-800">
+                  {siteInfo.site_no}
+                </span>
+              </div>
+              <div className="mb-1">
+                <span className="text-base font-medium text-gray-600">
+                  Station Source:
+                </span>
+                <a
+                  href={siteInfo.site_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block font-semibold text-lg text-blue-600 hover:text-blue-800"
+                >
+                  Station Data
+                </a>
+              </div>
+              {/* Add a note about the link for better context - reduced bottom spacing */}
+              <div className="text-xs text-gray-500">
+                Click the link above to view detailed station data.
+              </div>
             </div>
           </div>
         </div>
@@ -496,8 +557,10 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
           <h3 className="text-3xl font-bold text-gray-800 mb-4 text-center ml-11">
             Graphical Analysis
           </h3>
-          {/* Monthly Energy Plot */}
-          <div ref={hydroPlotRef}>
+
+          {/* Financial Plots Section */}
+          <div ref={financialPlotsRef}>
+            {/* Monthly Energy Plot */}
             <div className="mb-4">
               <ReusableEnergyPlot
                 chartTitle="Monthly Energy"
@@ -523,12 +586,12 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
               />
             </div>
 
-            {/*Monthly Flow Rate Plot */}
+            {/*Monthly River Flow Rate Plot */}
             <div className="mb-4">
               <ReusableEnergyPlot
-                chartTitle="Monthly Flow Rates"
+                chartTitle="Monthly River Flow Rates"
                 xAxisTitle="Months"
-                yAxisTitle="Flow Rate (m³/s)"
+                yAxisTitle="River Flow Rate (m³/s)"
                 labels={[
                   "Jan",
                   "Feb",
@@ -543,32 +606,51 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
                   "Nov",
                   "Dec",
                 ]}
-                label="Flow Rate (m³/s)"
-                data={hydroCalcValues.flow_rate}
+                label="River Flow Rate (m³/s)"
+                data={hydroCalcValues.river_flowrate}
                 type="line"
               />
             </div>
-            {/* Annual NPM Cost */}
+
+            {/* Monthly Intake Flow Rate Plot */}
             <div className="mb-4">
               <ReusableEnergyPlot
-                chartTitle="Annual NPV Cost"
-                xAxisTitle="Year"
-                yAxisTitle="NPV Cost ($)"
-                labels={generateYearLabels(hydroInputValues.analysisPeriod)}
-                label="NPV Cost ($)"
-                data={hydroCalcValues.annual_npv_cost}
+                chartTitle="Monthly Intake Flow Rates"
+                xAxisTitle="Months"
+                yAxisTitle="Intake Flow Rate (m³/s)"
+                labels={[
+                  "Jan",
+                  "Feb",
+                  "Mar",
+                  "Apr",
+                  "May",
+                  "Jun",
+                  "Jul",
+                  "Aug",
+                  "Sep",
+                  "Oct",
+                  "Nov",
+                  "Dec",
+                ]}
+                label="Intake Flow Rate (m³/s)"
+                data={hydroCalcValues.intake_flowrate}
                 type="line"
               />
             </div>
           </div>
 
-          {/* {hydroCalcValues && (
-            <img
-              src={placeholderEnergy}
-              alt="Weibull Distribution Plot"
-              className="max-w-full h-auto mb-4"
+          {/* Cost Plot Section */}
+          <div ref={costPlotRef} className="mb-4">
+            <ReusableEnergyPlot
+              chartTitle="Annual NPV Cost"
+              xAxisTitle="Year"
+              yAxisTitle="NPV Cost ($)"
+              labels={generateYearLabels(hydroInputValues.analysisPeriod)}
+              label="NPV Cost ($)"
+              data={hydroCalcValues.annual_npv_cost}
+              type="line"
             />
-          )} */}
+          </div>
         </div>
       </div>
     )
