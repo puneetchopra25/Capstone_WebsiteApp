@@ -22,7 +22,7 @@ const MapComponent = ({
   riverCoordinates,
   landCoordinates,
   setElevationDifference,
-  setElevationWarningMessage,
+  setWarningMessage,
   setSimulateButtonDisabled,
 }) => {
   const mapContainerRef = useRef(null);
@@ -54,12 +54,12 @@ const MapComponent = ({
       setElevationDifference(difference);
 
       if (difference < 0) {
-        setElevationWarningMessage(
+        setWarningMessage(
           "Warning: Plant location must be at a lower elevation than intake location."
         );
         setSimulateButtonDisabled(true);
       } else {
-        setElevationWarningMessage(null);
+        setWarningMessage(null);
         setSimulateButtonDisabled(false);
       }
     }
@@ -261,7 +261,7 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
     lat: 49.914,
   });
 
-  const [elevationWarningMessage, setElevationWarningMessage] = useState(null);
+  const [warningMessage, setWarningMessage] = useState(null);
   const [efficiency, setEfficiency] = useState(turbineModels[0].efficiency);
   const [selectedTurbineDetails, setSelectedTurbineDetails] = useState({
     id: turbineModels[0].id,
@@ -347,12 +347,12 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
           turbine: selectedTurbineDetails.code,
           lat: riverCoordinates.lat,
           long: riverCoordinates.lng,
-          head_loss: 0.05,
-          eco_flow: 0.1,
+          head_loss: 5,
+          eco_flow: 10,
         },
       });
 
-      // Handle the response accordingly
+      // Handle successful response (200)
       setHydroCalcValues({
         // cost values
         annual_cost: response.data["annual_cost"],
@@ -382,11 +382,31 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
         discountRate: discountRate,
       });
     } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "An unexpected error occurred";
+
+      switch (error.response?.status) {
+        case 400:
+          setWarningMessage(
+            "Error: Intake coordinates must be in Canada or US"
+          );
+          break;
+        case 501:
+          setWarningMessage(
+            "Error: No flow data available for the chosen site"
+          );
+          break;
+        case 500:
+          setWarningMessage("Internal Server Error. Please try again later");
+          break;
+        default:
+          setWarningMessage(errorMessage);
+      }
       console.error("Error during simulation:", error);
+    } finally {
+      setIsLoading(false);
+      setSimulateButtonDisabled(false);
     }
-    // Stop the loading process
-    setIsLoading(false);
-    setSimulateButtonDisabled(false);
   }, [
     setHydroCalcValues,
     elevationDifference,
@@ -431,7 +451,7 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
                 riverCoordinates={riverCoordinates}
                 landCoordinates={landCoordinates}
                 setElevationDifference={setElevationDifference}
-                setElevationWarningMessage={setElevationWarningMessage}
+                setWarningMessage={setWarningMessage}
                 setSimulateButtonDisabled={setSimulateButtonDisabled}
               />
               {/* <MapComponent
@@ -441,11 +461,9 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
                 setShowPopup={setShowPopup}
               /> */}
             </div>
-            {elevationWarningMessage && (
+            {warningMessage && (
               <div className="bg-red-100 rounded-2xl border-red-950 text-red-800 px-4 py-2 rounded relative mb-4">
-                <span className="block sm:inline">
-                  {elevationWarningMessage}
-                </span>
+                <span className="block sm:inline">{warningMessage}</span>
               </div>
             )}
 
