@@ -1,4 +1,3 @@
-import React from "react";
 import pure_sim from "../assets/puresim_2_logo-removebg-preview.png";
 
 const WelcomePage = () => {
