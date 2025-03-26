@@ -71,9 +71,7 @@ The application will be available at `http://localhost:5173` (or another port if
 
 ## Project Structure
 
-```
-
-## Key Dependencies
+ **Key Dependencies**
 
 - **React**: Frontend framework
 - **Chart.js & react-chartjs-2**: Data visualization
@@ -82,7 +80,7 @@ The application will be available at `http://localhost:5173` (or another port if
 - **Tailwind CSS**: Styling
 - **Vite**: Build tool and development server
 
-## Environment Variables
+ **Environment Variables**
 
 The application uses the following environment variables:
 
@@ -90,11 +88,9 @@ The application uses the following environment variables:
 |----------|-------------|----------|
 | VITE_MAPBOX_ACCESS_TOKEN | Mapbox API access token | Yes |
 
-## Notes
+ **Notes**
 
 - Ensure all environment variables are properly set before running the application
 - The Mapbox token should have appropriate permissions for the features you're using
 - For development, you can use the default public token, but for production, create a restricted token
 
-
-```
