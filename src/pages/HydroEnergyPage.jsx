@@ -4,16 +4,16 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import axios from "axios";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
-import {
-  SectionDivider,
-  SectionTitle,
-  DisplayWithLabel,
-  InputWithLabel,
-  LoadingSpinnerMessage,
-  TurbineSelector,
-  RangeInputWithLabel,
-  LabelWithMessage,
-} from "../components/CommonComponents";
+
+import { TurbineSelector } from "../components/TurbineSelector";
+import { RangeInputWithLabel } from "../components/RangeInputWithLabel";
+import { LabelWithMessage } from "../components/LabelWithMessage";
+import { LoadingSpinnerMessage } from "../components/LoadingSpinnerMessage";
+import { SectionDivider } from "../components/SectionDivider";
+import { SectionTitle } from "../components/SectionTitle";
+import { DisplayWithLabel } from "../components/DisplayWithLabel";
+import { InputWithLabel } from "../components/InputWithLabel";
+
 import { MAPBOX_ACCESS_TOKEN } from "../utils/constants";
 
 const MapComponent = ({

@@ -1,25 +1,14 @@
 /* eslint-disable no-unused-vars */
 import { useState, useCallback, useEffect, useRef } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
-import {
-  MapContainer,
-  TileLayer,
-  useMapEvents,
-  Marker,
-  useMap,
-} from "react-leaflet";
-import "leaflet-geosearch/dist/geosearch.css";
+
 import axios from "axios";
-import {
-  SectionDivider,
-  SectionTitle,
-  DisplayWithLabel,
-  InputWithLabel,
-  LoadingSpinnerMessage,
-  TurbineSelector,
-} from "../components/CommonComponents";
+import { TurbineSelector } from "../components/TurbineSelector";
+import { SectionDivider } from "../components/SectionDivider";
+import { SectionTitle } from "../components/SectionTitle";
+import { DisplayWithLabel } from "../components/DisplayWithLabel";
+import { InputWithLabel } from "../components/InputWithLabel";
+import { LoadingSpinnerMessage } from "../components/LoadingSpinnerMessage";
+
 import { MAPBOX_ACCESS_TOKEN } from "../utils/constants";
 
 // new map module

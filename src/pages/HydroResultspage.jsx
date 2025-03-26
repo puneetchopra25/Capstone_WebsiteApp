@@ -2,7 +2,7 @@ import html2canvas from "html2canvas";
 import { useRef } from "react";
 import { FileText } from "lucide-react";
 import { useEffect, useState } from "react";
-import { ReusableEnergyPlot } from "../components/CommonComponents";
+import { ReusableEnergyPlot } from "../components/ReusableEnergyPlot";
 import {
   Document,
   Page,
@@ -564,7 +564,7 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
             <div className="mb-4">
               <ReusableEnergyPlot
                 chartTitle="Monthly Energy"
-                xAxisTitle="Month"
+                xAxisTitle="Months"
                 yAxisTitle={`Energy (${unit})`}
                 labels={[
                   "Jan",
@@ -586,12 +586,12 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
               />
             </div>
 
-            {/*Monthly River Flow Rate Plot */}
+            {/* Combined Flow Rates Plot */}
             <div className="mb-4">
               <ReusableEnergyPlot
-                chartTitle="Monthly River Flow Rates"
+                chartTitle="Monthly Flow Rates"
                 xAxisTitle="Months"
-                yAxisTitle="River Flow Rate (m³/s)"
+                yAxisTitle="Flow Rate (m³/s)"
                 labels={[
                   "Jan",
                   "Feb",
@@ -606,35 +606,22 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
                   "Nov",
                   "Dec",
                 ]}
-                label="River Flow Rate (m³/s)"
-                data={hydroCalcValues.river_flowrate}
-                type="line"
-              />
-            </div>
-
-            {/* Monthly Intake Flow Rate Plot */}
-            <div className="mb-4">
-              <ReusableEnergyPlot
-                chartTitle="Monthly Intake Flow Rates"
-                xAxisTitle="Months"
-                yAxisTitle="Intake Flow Rate (m³/s)"
-                labels={[
-                  "Jan",
-                  "Feb",
-                  "Mar",
-                  "Apr",
-                  "May",
-                  "Jun",
-                  "Jul",
-                  "Aug",
-                  "Sep",
-                  "Oct",
-                  "Nov",
-                  "Dec",
+                datasets={[
+                  {
+                    label: "River Flow Rate",
+                    data: hydroCalcValues.river_flowrate,
+                    type: "line",
+                    color: "rgba(0, 122, 209, 0.86)",
+                  },
+                  {
+                    label: "Intake Flow Rate",
+                    data: hydroCalcValues.intake_flowrate,
+                    type: "line",
+                    color: "rgba(58, 190, 41, 0.88)",
+                  },
                 ]}
-                label="Intake Flow Rate (m³/s)"
-                data={hydroCalcValues.intake_flowrate}
                 type="line"
+                showLegend={true}
               />
             </div>
           </div>

@@ -11,7 +11,7 @@ import SettingsPage from "./pages/SettingsPage";
 import HelpPage from "./pages/HelpPage";
 import Windresultspage from "./pages/Windresultspage";
 import SolarResultsPage from "./pages/Solarresultspage";
-import { SectionDivider } from "./components/CommonComponents";
+import { SectionDivider } from "./components/SectionDivider";
 import WelcomePage from "./pages/WelcomePage";
 import HydroResultsPage from "./pages/HydroResultspage";
 

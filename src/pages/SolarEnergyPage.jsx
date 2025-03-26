@@ -1,24 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
-import {
-  MapContainer,
-  TileLayer,
-  useMapEvents,
-  Marker,
-  useMap,
-} from "react-leaflet";
-import "leaflet-geosearch/dist/geosearch.css";
+
 import axios from "axios";
 import { Switch } from "@headlessui/react";
-import {
-  SectionDivider,
-  SectionTitle,
-  DisplayWithLabel,
-  InputWithLabel,
-  LoadingSpinnerMessage,
-} from "../components/CommonComponents";
+
+import { SectionDivider } from "../components/SectionDivider";
+import { SectionTitle } from "../components/SectionTitle";
+import { DisplayWithLabel } from "../components/DisplayWithLabel";
+import { InputWithLabel } from "../components/InputWithLabel";
+import { LoadingSpinnerMessage } from "../components/LoadingSpinnerMessage";
 import { MAPBOX_ACCESS_TOKEN } from "../utils/constants";
 
 // new map module
@@ -272,6 +261,7 @@ const SolarEnergyPage = ({
       // console.log({ solar: response.data });
     } catch (error) {
       console.error("Error during simulation:", error);
+      setError(error.message);
       // Handle error accordingly
     }
     // Stop the loading process
@@ -298,10 +288,10 @@ const SolarEnergyPage = ({
     setTracking(e.target.value);
   };
 
-  const handleLocationSelect = useCallback((newLocation) => {
-    setLocation(newLocation);
-    setError("");
-  }, []);
+  // const handleLocationSelect = useCallback((newLocation) => {
+  //   setLocation(newLocation);
+  //   setError("");
+  // }, []);
 
   const handleInputChange = useCallback((e) => {
     const { id, value } = e.target;
