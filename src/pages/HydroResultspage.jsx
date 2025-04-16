@@ -178,13 +178,39 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
     hydroCalcValues.monthly_energy_mwh
   );
 
-  // testing
-  // console.log(`Annual Hydro Energy: ${formattedAnnualHydroEnergy}`);
-  // console.log("Average Monthly Hydro Energy:", formattedAverageMonthlyEnergy);
-  // console.log("Annual Energy:", annualHydroEnergy);
-  // console.log("Hydro Calc Values:", hydroCalcValues);
-  // console.log("hydro head", hydroCalcValues.hydro_head);
-  // console.log("Hydro Input Values:", hydroInputValues);
+  // Function to format NPV cost data for the cost plot
+  function formatCostPlotUnits(data) {
+    const maxValue = Math.max(...data); // Get the maximum value in the data
+    if (maxValue >= 1e9) {
+      // Use billions
+      return {
+        formattedData: data.map((value) => value / 1e9),
+        unit: "B $",
+      };
+    } else if (maxValue >= 1e6) {
+      // Use millions
+      return {
+        formattedData: data.map((value) => value / 1e6),
+        unit: "M $",
+      };
+    } else if (maxValue >= 1e3) {
+      // Use thousands
+      return {
+        formattedData: data.map((value) => value / 1e3),
+        unit: "T $",
+      };
+    } else {
+      // Use dollars
+      return {
+        formattedData: data,
+        unit: "$",
+      };
+    }
+  }
+
+  // Format data for the cost plot
+  const { formattedData: formattedCostData, unit: NPVcostUnit } =
+    formatCostPlotUnits(hydroCalcValues.annual_npv_cost);
 
   // Create a PDF document
   const MyDocument = () => (
@@ -205,16 +231,18 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
                 Power House Coordinates
               </Text>
               <Text style={documentStyles.tableCell}>
-                Longitude: {hydroInputValues.powerHouseCoordinates.lng},
-                Latitude: {hydroInputValues.powerHouseCoordinates.lat}
+                Longitude:{" "}
+                {hydroInputValues.powerHouseCoordinates.lng.toFixed(2)},
+                Latitude:{" "}
+                {hydroInputValues.powerHouseCoordinates.lat.toFixed(2)}
               </Text>
             </View>
             {/* Intake Coordinates */}
             <View style={documentStyles.tableRow}>
               <Text style={documentStyles.tableCell}>Intake Coordinates</Text>
               <Text style={documentStyles.tableCell}>
-                Longitude: {hydroInputValues.intakeCoordinates.lng}, Latitude:{" "}
-                {hydroInputValues.intakeCoordinates.lat}
+                Longitude: {hydroInputValues.intakeCoordinates.lng.toFixed(2)},
+                Latitude: {hydroInputValues.intakeCoordinates.lat.toFixed(2)}
               </Text>
             </View>
             {/* Turbine Model */}
@@ -224,18 +252,32 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
                 {hydroInputValues.turbine}
               </Text>
             </View>
-            {/* Density */}
+            {/* Penstock Diameter */}
             <View style={documentStyles.tableRow}>
-              <Text style={documentStyles.tableCell}>Density</Text>
+              <Text style={documentStyles.tableCell}>Penstock Diameter</Text>
               <Text style={documentStyles.tableCell}>
-                {hydroInputValues.density} kg/m³
+                {hydroInputValues.penstockDiameter} m
               </Text>
             </View>
-            {/* Gravity */}
+            {/* Penstock Velocity */}
             <View style={documentStyles.tableRow}>
-              <Text style={documentStyles.tableCell}>Gravity</Text>
+              <Text style={documentStyles.tableCell}>Penstock Velocity</Text>
               <Text style={documentStyles.tableCell}>
-                {hydroInputValues.gravity} m/s²
+                {hydroInputValues.penstockVelocity} m/s
+              </Text>
+            </View>
+            {/* Head Loss */}
+            <View style={documentStyles.tableRow}>
+              <Text style={documentStyles.tableCell}>Head Loss</Text>
+              <Text style={documentStyles.tableCell}>
+                {hydroInputValues.headLoss} %
+              </Text>
+            </View>
+            {/* Eco Flow */}
+            <View style={documentStyles.tableRow}>
+              <Text style={documentStyles.tableCell}>Eco Flow</Text>
+              <Text style={documentStyles.tableCell}>
+                {hydroInputValues.ecoFlow} %
               </Text>
             </View>
             {/* Analysis Period */}
@@ -288,12 +330,12 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
               </Text>
             </View>
             {/* Efficiency */}
-            <View style={documentStyles.tableRow}>
+            {/* <View style={documentStyles.tableRow}>
               <Text style={documentStyles.tableCell}>Efficiency</Text>
               <Text style={documentStyles.tableCell}>
                 {hydroCalcValues.efficiency} %
               </Text>
-            </View>
+            </View> */}
           </View>
         </View>
 
@@ -338,7 +380,7 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
       {/* Page 2 - Financial Plots (Monthly Energy, River Flow Rate, Intake Flow Rate) */}
       <Page size="A4" style={documentStyles.page}>
         <Text style={documentStyles.subtitle}>
-          Graphical Financial Analysis
+          Graphical Analysis
         </Text>
 
         {financialPlotsImage ? (
@@ -452,14 +494,14 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
               </div>
 
               {/* Efficiency */}
-              <div className="mb-3">
+              {/* <div className="mb-3">
                 <span className="text-base font-medium text-gray-600">
                   Efficiency:
                 </span>
                 <span className="block font-semibold text-lg text-gray-800">
                   {hydroCalcValues.efficiency} %
                 </span>
-              </div>
+              </div> */}
             </div>
           </div>
           {/* Cost Results */}
@@ -630,11 +672,11 @@ const HydroResultsPage = ({ hydroCalcValues, hydroInputValues }) => {
           <div ref={costPlotRef} className="mb-4">
             <ReusableEnergyPlot
               chartTitle="Annual NPV Cost"
-              xAxisTitle="Year"
-              yAxisTitle="NPV Cost ($)"
+              xAxisTitle="Years"
+              yAxisTitle={`NPV Cost (${NPVcostUnit})`}
               labels={generateYearLabels(hydroInputValues.analysisPeriod)}
-              label="NPV Cost ($)"
-              data={hydroCalcValues.annual_npv_cost}
+              label={`NPV Cost (${NPVcostUnit})`}
+              data={formattedCostData}
               type="line"
             />
           </div>

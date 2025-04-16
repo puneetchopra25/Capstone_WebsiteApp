@@ -7,7 +7,6 @@ import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 
 import { TurbineSelector } from "../components/TurbineSelector";
 import { RangeInputWithLabel } from "../components/RangeInputWithLabel";
-import { LabelWithMessage } from "../components/LabelWithMessage";
 import { LoadingSpinnerMessage } from "../components/LoadingSpinnerMessage";
 import { SectionDivider } from "../components/SectionDivider";
 import { SectionTitle } from "../components/SectionTitle";
@@ -232,9 +231,9 @@ const MapComponent = ({
 
 // Turbine models for the dropdown selector
 const turbineModels = [
-  { id: 0, code: "FRC", name: "Francis Turbine", efficiency: 93 },
-  { id: 1, code: "PLT", name: "Pelton Turbine", efficiency: 88 },
-  { id: 2, code: "KPL", name: "Kaplan Turbine", efficiency: 94 },
+  { id: 0, code: "FRC", name: "Francis Turbine" },
+  { id: 1, code: "PLT", name: "Pelton Turbine" },
+  { id: 2, code: "KPL", name: "Kaplan Turbine" },
 ];
 
 // Hydro Energy Page Component
@@ -262,17 +261,20 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
   });
 
   const [warningMessage, setWarningMessage] = useState(null);
-  const [efficiency, setEfficiency] = useState(turbineModels[0].efficiency);
   const [selectedTurbineDetails, setSelectedTurbineDetails] = useState({
     id: turbineModels[0].id,
     code: turbineModels[0].code,
     name: turbineModels[0].name,
-    efficiency: turbineModels[0].efficiency,
   });
+
+  const [diameterOfPenstock, setDiameterOfPenstock] = useState(10);
+  const [penstockVelocity, setPenstockVelocity] = useState(1.2);
 
   // Financial paramaters
   const [analysisPeriod, setAnalysisPeriod] = useState(8);
-  const [discountRate, setDiscountRate] = useState(60);
+  const [discountRate, setDiscountRate] = useState(10);
+  const [headLoss, setHeadLoss] = useState(5);
+  const [ecoFlow, setEcoFlow] = useState(10);
 
   // Reset the calculated values when the component unmounts
   useEffect(() => {
@@ -288,9 +290,7 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
       id: selectedTurbineDetails.id,
       code: selectedTurbineDetails.code,
       name: selectedTurbineDetails.name,
-      efficiency: selectedTurbineDetails.efficiency,
     });
-    setEfficiency(selectedTurbineDetails.efficiency);
   };
 
   // Handle turbine selection based on elevation
@@ -299,15 +299,15 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
       // delay the turbine selection to ensure the elevation difference is loaded
       const timeoutId = setTimeout(() => {
         let selectedTurbine;
-        // if elevation difference is between 30 and 300, select Francis
-        if (elevationDifference <= 300 && elevationDifference >= 30) {
+        // if elevation difference is between 50 and 200, select Francis
+        if (elevationDifference <= 200 && elevationDifference >= 50) {
           selectedTurbine = turbineModels[0];
         }
-        // if elevation difference is less than 30, select Kaplan
-        else if (elevationDifference <= 30) {
+        // if elevation difference is less than 50, select Kaplan
+        else if (elevationDifference < 50) {
           selectedTurbine = turbineModels[2];
         }
-        // if elevation difference is greater than 300, select Pelton
+        // if elevation difference is greater than 200, select Pelton
         else {
           selectedTurbine = turbineModels[1];
         }
@@ -316,9 +316,7 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
           id: selectedTurbine.id,
           code: selectedTurbine.code,
           name: selectedTurbine.name,
-          efficiency: selectedTurbine.efficiency,
         });
-        setEfficiency(selectedTurbine.efficiency);
       }, 200);
 
       // Cleanup timeout on unmount or when elevationDifference changes
@@ -342,13 +340,13 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
           hydro_head: elevationDifference,
           period: analysisPeriod,
           discount_rate: discountRate,
-          d_penstock: 10,
-          v_penstock: 1.2,
+          d_penstock: diameterOfPenstock,
+          v_penstock: penstockVelocity,
           turbine: selectedTurbineDetails.code,
           lat: riverCoordinates.lat,
           long: riverCoordinates.lng,
-          head_loss: 5,
-          eco_flow: 10,
+          head_loss: headLoss,
+          eco_flow: ecoFlow,
         },
       });
 
@@ -367,7 +365,6 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
         intake_flowrate: response.data["intake_flowrate"],
         river_flowrate: response.data["river_flowrate"],
         hydro_head: elevationDifference,
-        efficiency: efficiency,
         // site information
         site_link: response.data["site_link"],
         site_no: response.data["site_no"],
@@ -376,8 +373,10 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
         intakeCoordinates: riverCoordinates,
         powerHouseCoordinates: landCoordinates,
         turbine: selectedTurbineDetails.name,
-        density: 1000,
-        gravity: 9.81,
+        penstockDiameter: diameterOfPenstock,
+        penstockVelocity: penstockVelocity,
+        headLoss: headLoss,
+        ecoFlow: ecoFlow,
         analysisPeriod: analysisPeriod,
         discountRate: discountRate,
       });
@@ -415,19 +414,39 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
     selectedTurbineDetails.code,
     selectedTurbineDetails.name,
     riverCoordinates,
-    efficiency,
     setHydroInputValues,
     landCoordinates,
+    diameterOfPenstock,
+    penstockVelocity,
+    headLoss,
+    ecoFlow,
   ]);
 
   // Add useEffect to validate discount rate when it changes
   useEffect(() => {
-    if (discountRate < 0 || discountRate > 100) {
+    if (
+      discountRate < 0 ||
+      discountRate > 100 ||
+      diameterOfPenstock <= 0 ||
+      penstockVelocity <= 0 ||
+      headLoss < 0 ||
+      headLoss > 100 ||
+      ecoFlow < 0 ||
+      ecoFlow > 100 ||
+      analysisPeriod < 0
+    ) {
       setSimulateButtonDisabled(true);
     } else {
       setSimulateButtonDisabled(false);
     }
-  }, [discountRate]);
+  }, [
+    discountRate,
+    diameterOfPenstock,
+    penstockVelocity,
+    headLoss,
+    ecoFlow,
+    analysisPeriod,
+  ]);
 
   return (
     <div className="h-screen bg-gray-200 px-6 py-0 overflow-auto transition duration-500 ease-in-out">
@@ -498,29 +517,73 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
                 selectedTurbineDetailsIndex={selectedTurbineDetails.id}
               />
 
-              {/* Flow Rate section  */}
-              <LabelWithMessage
-                label="Flow Rate (m³/s)"
-                message="System will use historical flow rate based on the selected coordinates."
-              />
-
               {/* Elevation difference (Head) section */}
               <DisplayWithLabel
                 label="Head (m)"
                 value={elevationDifference?.toFixed(3)}
               />
-              {/*Density of water section*/}
-              <DisplayWithLabel label="Density (kg/m³)" value="1000" />
-              {/*Gravity section*/}
-              <DisplayWithLabel label="Gravity (m/s²)" value="9.81" />
-              {/*Efficiency section*/}
+              {/*Diameter of penstock section*/}
+              <InputWithLabel
+                label="Penstock Diameter (m)"
+                id="diameterOfPenstock"
+                value={diameterOfPenstock}
+                step={1}
+                min={0}
+                max={10}
+                onChange={(e) => setDiameterOfPenstock(e.target.value)}
+                error={
+                  diameterOfPenstock &&
+                  (diameterOfPenstock <= 0
+                    ? "Diameter of penstock must be greater than 0"
+                    : null)
+                }
+              />
+              {/*Penstock Velocity section*/}
+              <InputWithLabel
+                label="Penstock Velocity (m/s)"
+                id="penstockVelocity"
+                value={penstockVelocity}
+                step={0.1}
+                min={0}
+                max={10}
+                onChange={(e) => setPenstockVelocity(e.target.value)}
+                error={
+                  penstockVelocity &&
+                  (penstockVelocity <= 0
+                    ? "Penstock velocity must be greater than 0"
+                    : null)
+                }
+              />
+
+              {/*Head Loss section*/}
               <RangeInputWithLabel
-                label="Efficiency (%)"
-                id="efficiency"
-                value={efficiency}
-                onChange={(e) => setEfficiency(e.target.value)}
+                label="Head Loss (%)"
+                id="headLoss"
+                value={headLoss}
+                onChange={(e) => setHeadLoss(e.target.value)}
                 min={0}
                 max={100}
+                error={
+                  headLoss &&
+                  (headLoss < 0 || headLoss > 100
+                    ? "Head loss must be between 0 and 100"
+                    : null)
+                }
+              />
+              {/*Eco Flow section*/}
+              <RangeInputWithLabel
+                label="Eco Flow (%)"
+                id="ecoFlow"
+                value={ecoFlow}
+                onChange={(e) => setEcoFlow(e.target.value)}
+                min={0}
+                max={100}
+                error={
+                  ecoFlow &&
+                  (ecoFlow < 0 || ecoFlow > 100
+                    ? "Eco flow must be between 0 and 100"
+                    : null)
+                }
               />
             </div>
           </section>
@@ -535,15 +598,21 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
                 value={analysisPeriod}
                 step={1}
                 onChange={(e) => setAnalysisPeriod(e.target.value)}
+                error={
+                  analysisPeriod &&
+                  (analysisPeriod <= 0
+                    ? "Analysis period must be greater than 0"
+                    : null)
+                }
               />
-              <InputWithLabel
+              {/* Discount Rate section*/}
+              <RangeInputWithLabel
                 label="Discount Rate (%)"
                 id="discountRate"
                 value={discountRate}
-                step={1}
+                onChange={(e) => setDiscountRate(e.target.value)}
                 min={0}
                 max={100}
-                onChange={(e) => setDiscountRate(e.target.value)}
                 error={
                   discountRate &&
                   (discountRate < 0 || discountRate > 100
