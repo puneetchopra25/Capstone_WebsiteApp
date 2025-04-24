@@ -325,6 +325,7 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
   }, [elevationDifference]);
 
   const handleSimulation = useCallback(async () => {
+    setWarningMessage(null);
     // Start the loading process
     setIsLoading(true);
     // diable simulate button when loading
