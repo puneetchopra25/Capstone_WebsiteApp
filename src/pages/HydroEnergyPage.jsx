@@ -336,7 +336,7 @@ const HydroEnergyPage = ({ setHydroCalcValues, setHydroInputValues }) => {
     //47.2580604553223
     try {
       // Make a request to the backend to simulate the hydro energy
-      const response = await axios.get("http://127.0.0.1:5000/ror", {
+      const response = await axios.get("https://server-fluor-10.onrender.com/ror", {
         params: {
           hydro_head: elevationDifference,
           period: analysisPeriod,
