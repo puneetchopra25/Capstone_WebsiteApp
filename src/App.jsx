@@ -1,20 +1,26 @@
 import { useState, useEffect } from "react";
-import { Wind, Sun, Waves } from "lucide-react";
+import { Wind, Sun, Waves, Atom, GitMerge } from "lucide-react";
 import Sidebar, { SidebarItem } from "./components/Sidebar";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 // import { pdfjs, Document, Page } from 'react-pdf';
 
+// import each page
 import SolarEnergyPage from "./pages/SolarEnergyPage";
 import WindEnergyPage from "./pages/WindEnergyPage";
 import HydroEnergyPage from "./pages/HydroEnergyPage";
-import SettingsPage from "./pages/SettingsPage";
-import HelpPage from "./pages/HelpPage";
+import SMREnergyPage from "./pages/SMREnergyPage";
+
 import Windresultspage from "./pages/Windresultspage";
 import SolarResultsPage from "./pages/Solarresultspage";
-import { SectionDivider } from "./components/SectionDivider";
-import WelcomePage from "./pages/WelcomePage";
 import HydroResultsPage from "./pages/HydroResultspage";
+import SMRResultsPage from "./pages/SMRresultspage";
 
+import WelcomePage from "./pages/WelcomePage";
+import SettingsPage from "./pages/SettingsPage";
+import HelpPage from "./pages/HelpPage";
+import { SectionDivider } from "./components/SectionDivider";
+
+// input page to result page
 const App = () => {
   // Wind Component States
   const [calculatedValues, setCalculatedValues] = useState(null);
@@ -32,6 +38,9 @@ const App = () => {
   // Hydro Component States
   const [hydroCalcValues, setHydroCalcValues] = useState(null);
   const [hydroInputValues, setHydroInputValues] = useState(null);
+  // SMR Component States
+  const [SMRCalcValues, setSMRCalcValues] = useState(null);
+  const [SMRInputValues, setSMRInputValues] = useState(null);
 
   // const handleDownloadPdf = () => {
   //   // Logic to generate and download the PDF
@@ -76,6 +85,7 @@ const App = () => {
     }
   }, [solarCalcValues]);
 
+  // multiple pages and screen 3 column layout
   return (
     <Router>
       <div className="flex h-screen">
@@ -97,6 +107,16 @@ const App = () => {
             text="Hydro Energy"
             to="/hydro-energy"
           />
+          <SidebarItem
+            icon={<Atom size={20} />}
+            text="SMR Energy"
+            to="/smr-energy"
+          />
+          <SidebarItem
+            icon={<GitMerge size={20} />}
+            text="Energy Selection"
+            to="/Energy Selection"
+          />
           <SectionDivider />
 
           {/* <SidebarItem icon={<LifeBuoy size={20} />} text="Help" to="/help" /> */}
@@ -108,6 +128,8 @@ const App = () => {
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/help" element={<HelpPage />} />
             </Routes>
+            
+            {/* results page middle column */}
             {calculatedValues && (
               <Windresultspage
                 calculatedValues={calculatedValues}
@@ -133,10 +155,18 @@ const App = () => {
                 hydroInputValues={hydroInputValues}
               />
             )}
+            {SMRCalcValues && (
+              <SMRResultsPage
+                SMRCalcValues = {SMRCalcValues}
+                SMRInputValues = {SMRInputValues}
+                />
+            )}
           </main>
         </div>
         <div className="mr-0">
           <main className="flex-grow-0">
+            
+            {/* right side input panel */}
             <Routes>
               <Route
                 path="/solar-energy"
@@ -151,7 +181,8 @@ const App = () => {
               <Route
                 path="/wind-energy"
                 element={
-                  <WindEnergyPage setCalculatedValues={setCalculatedValues} />
+                  <WindEnergyPage 
+                    setCalculatedValues={setCalculatedValues} />
                 }
               />
               <Route
@@ -163,6 +194,15 @@ const App = () => {
                   />
                 }
               />
+              <Route
+                path="/smr-energy"
+                element={
+                  <SMREnergyPage
+                    setSMRCalcValues={setSMRCalcValues}
+                    setSMRInputValues={setSMRInputValues}
+                  />
+                }
+                />
             </Routes>
           </main>
         </div>
