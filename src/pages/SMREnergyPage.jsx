@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import axios from "axios";
 
 import { SectionDivider } from "../components/SectionDivider";
@@ -16,12 +16,80 @@ import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import { MAPBOX_ACCESS_TOKEN } from "../utils/constants";
 */
 
+import mapboxgl from "mapbox-gl";
+import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
+import { MAPBOX_ACCESS_TOKEN } from "../utils/constants";
+import "mapbox-gl/dist/mapbox-gl.css";
+import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
+
+mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
+
+export const MapComponent = ({ coordinates, setCoordinates }) => {
+  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
+  const markerRef = useRef(null);
+
+  useEffect(() => {
+    // safety check
+    if (!mapContainerRef.current || mapRef.current || !coordinates) return;
+
+    // initialize map
+    mapRef.current = new mapboxgl.Map({
+      container: mapContainerRef.current,
+      style: "mapbox://styles/mapbox/outdoors-v12",
+      center: [coordinates.lng, coordinates.lat],
+      zoom: 6,
+    });
+
+    // Add geocoder search
+    const geocoder = new MapboxGeocoder({
+      accessToken: MAPBOX_ACCESS_TOKEN,
+      mapboxgl,
+      placeholder: "Enter location",
+    });
+    mapRef.current.addControl(geocoder, "top-left");
+
+    // Add initial marker
+    markerRef.current = new mapboxgl.Marker()
+      .setLngLat([coordinates.lng, coordinates.lat])
+      .addTo(mapRef.current);
+
+    // click map → move marker
+    mapRef.current.on("click", (e) => {
+      const { lng, lat } = e.lngLat;
+      markerRef.current.setLngLat([lng, lat]);
+      setCoordinates({ lat, lng });
+    });
+
+    // search result → move marker
+    geocoder.on("result", (e) => {
+      const [lng, lat] = e.result.geometry.coordinates;
+      markerRef.current.setLngLat([lng, lat]);
+      mapRef.current.flyTo({ center: [lng, lat] });
+      setCoordinates({ lat, lng });
+    });
+
+    // clean up on unmount
+    return () => {
+      if (mapRef.current) mapRef.current.remove();
+      mapRef.current = null;
+    };
+  }, [coordinates, setCoordinates]);
+
+  return (
+    <div
+      ref={mapContainerRef}
+      className="h-60 rounded-lg border-2 border-gray-700"
+    />
+  );
+};
+
+
 const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
   const [coordinates, setCoordinates] = useState({ lat: 50.671, lng: -120.332 });
   const [isLoading, setIsLoading] = useState(false);
 
   const [discountRate, setDiscountRate] = useState("5");
-  const [kwhCost, setKwhCost] = useState("1");
   const [yearsOfModeling, setYearsOfModeling] = useState("25");
   const [modelName, setModelName] = useState("NUSCALE POWER MODULE");
   const [numUnits, setNumUnits] = useState("1");
@@ -41,17 +109,17 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
 
     try {
       const response = await axios.get(
-        "http://127.0.0.1:8080/smr",
+        "http://localhost:8080/smr",
         {
           params: {
             latitude: coordinates.lat,
             longitude: coordinates.lng,
             rate: discountRate,
-            kwh_cost: kwhCost,
             years: yearsOfModeling,
             model: modelName,
             num_units: numUnits,
           },
+          withCredentials: false
         }
       );
 
@@ -63,7 +131,6 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
         modelName,
         numUnits,
         discountRate,
-        kwhCost,
         yearsOfModeling,
         latitude: coordinates.lat,
         longitude: coordinates.lng,
@@ -77,7 +144,6 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
   }, [
     coordinates,
     discountRate,
-    kwhCost,
     yearsOfModeling,
     modelName,
     numUnits,
@@ -86,7 +152,7 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
   ]);
 
   return (
-    <div className="h-screen p-6 overflow-auto bg-gray-200">
+    <div className="h-screen p-6 py-0 overflow-auto transition duration-500 ease-in-out bg-gray-200">
       {isLoading && <LoadingSpinnerMessage energy="SMR" />}
 
       <div className="w-[420px] mx-auto text-gray-900">
@@ -97,8 +163,11 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
         {/* Location Section */}
         <section className="mb-6">
           <SectionTitle title="Location" />
-          <div className="h-60 rounded-lg border-2 border-gray-700 bg-gray-100 flex items-center justify-center text-gray-500">
-            Map disabled
+          <div className="mb-4">
+          <MapComponent
+            coordinates={coordinates}
+            setCoordinates={setCoordinates}
+          />
           </div>
           <DisplayWithLabel label="Latitude (N)" value={coordinates.lat.toFixed(3)} />
           <DisplayWithLabel label="Longitude (E)" value={coordinates.lng.toFixed(3)} />
@@ -118,7 +187,9 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
               value={modelName}
               onChange={(e) => setModelName(e.target.value)}
             >
-              <option value="NUSCALE POWER MODULE">NUSCALE POWER MODULE</option>
+              <option value="NUSCALE POWER MODULE">NuScale Power Module</option>
+              <option value="HOLTEC">Holtec SMR-300</option>
+              <option value="HITACHI">GE-Hitachi BWRX-300</option>
               {/* Add more SMR types here */}
             </select>
           </div>
@@ -151,14 +222,6 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
               const val = Number(e.target.value);
               if (val >= 0 && val <= 100) setDiscountRate(e.target.value);
             }}
-          />
-
-          <InputWithLabel
-            label="Cost of Electricity ($/kWh)"
-            id="kwhCost"
-            value={kwhCost}
-            step={1}
-            onChange={(e) => setKwhCost(e.target.value)}
           />
 
           <InputWithLabel
