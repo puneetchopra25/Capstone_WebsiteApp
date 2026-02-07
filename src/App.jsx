@@ -9,11 +9,13 @@ import SolarEnergyPage from "./pages/SolarEnergyPage";
 import WindEnergyPage from "./pages/WindEnergyPage";
 import HydroEnergyPage from "./pages/HydroEnergyPage";
 import SMREnergyPage from "./pages/SMREnergyPage";
+import ComparisonInputPage from "./pages/ComparisonInputPage";
 
 import Windresultspage from "./pages/Windresultspage";
 import SolarResultsPage from "./pages/Solarresultspage";
 import HydroResultsPage from "./pages/HydroResultspage";
 import SMRResultsPage from "./pages/SMRresultspage";
+import ComparisonOutputPage from "./pages/ComparisonOutputPage";
 
 import WelcomePage from "./pages/WelcomePage";
 import SettingsPage from "./pages/SettingsPage";
@@ -41,6 +43,9 @@ const App = () => {
   // SMR Component States
   const [SMRCalcValues, setSMRCalcValues] = useState(null);
   const [SMRInputValues, setSMRInputValues] = useState(null);
+  // Comparison Component States
+  const [ComparisonCalcValues, setComparisonCalcValues] = useState(null);
+  const [ComparisonInputValues, setComparisonInputValues] = useState(null);
 
   // const handleDownloadPdf = () => {
   //   // Logic to generate and download the PDF
@@ -114,8 +119,8 @@ const App = () => {
           />
           <SidebarItem
             icon={<GitMerge size={20} />}
-            text="Energy Selection"
-            to="/Energy Selection"
+            text="Comparison"
+            to="/Comparison"
           />
           <SectionDivider />
 
@@ -161,6 +166,12 @@ const App = () => {
                 SMRInputValues = {SMRInputValues}
                 />
             )}
+            {ComparisonCalcValues && (
+              <ComparisonOutputPage
+                ComparisonCalcValues = {ComparisonCalcValues}
+                ComparisonInputValues = {ComparisonInputValues}
+                />
+            )}
           </main>
         </div>
         <div className="mr-0">
@@ -200,6 +211,15 @@ const App = () => {
                   <SMREnergyPage
                     setSMRCalcValues={setSMRCalcValues}
                     setSMRInputValues={setSMRInputValues}
+                  />
+                }
+                />
+              <Route
+                path="/Comparison"
+                element={
+                  <ComparisonInputPage
+                    setComparisonCalcValues={setComparisonCalcValues}
+                    setComparisonInputValues={setComparisonInputValues}
                   />
                 }
                 />

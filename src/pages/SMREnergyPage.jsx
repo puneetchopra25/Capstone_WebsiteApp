@@ -7,15 +7,6 @@ import { InputWithLabel } from "../components/InputWithLabel";
 import { DisplayWithLabel } from "../components/DisplayWithLabel";
 import { LoadingSpinnerMessage } from "../components/LoadingSpinnerMessage";
 
-/*
-// need mapbox api access token
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
-import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
-import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
-import { MAPBOX_ACCESS_TOKEN } from "../utils/constants";
-*/
-
 import mapboxgl from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import { MAPBOX_ACCESS_TOKEN } from "../utils/constants";
@@ -54,14 +45,14 @@ export const MapComponent = ({ coordinates, setCoordinates }) => {
       .setLngLat([coordinates.lng, coordinates.lat])
       .addTo(mapRef.current);
 
-    // click map → move marker
+    // Map cursor click
     mapRef.current.on("click", (e) => {
       const { lng, lat } = e.lngLat;
       markerRef.current.setLngLat([lng, lat]);
       setCoordinates({ lat, lng });
     });
 
-    // search result → move marker
+    // Map search location
     geocoder.on("result", (e) => {
       const [lng, lat] = e.result.geometry.coordinates;
       markerRef.current.setLngLat([lng, lat]);
@@ -89,10 +80,10 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
   const [coordinates, setCoordinates] = useState({ lat: 50.671, lng: -120.332 });
   const [isLoading, setIsLoading] = useState(false);
 
-  const [discountRate, setDiscountRate] = useState("5");
-  const [yearsOfModeling, setYearsOfModeling] = useState("25");
-  const [modelName, setModelName] = useState("NUSCALE POWER MODULE");
-  const [numUnits, setNumUnits] = useState("1");
+  const [discount_rate, setDiscount_rate] = useState("5");
+  const [years_of_modelling, setYears_of_modelling] = useState("25");
+  const [model_name, setModel_name] = useState("NUSCALE POWER MODULE");
+  const [num_units, setNum_units] = useState("1");
 
   // Clear SMR results when page unmounts
   useEffect(() => {
@@ -108,32 +99,48 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
     setSMRInputValues(null);
 
     try {
+  
+  // Whats being send to backend
+  console.log("Sending to backend:", {
+  model_name: model_name,
+  num_units: Number(num_units),
+  lat: coordinates.lat,
+  long: coordinates.lng,
+  years_of_modelling: Number(years_of_modelling),
+  discount_rate: Number(discount_rate)/100,
+});
+
       const response = await axios.get(
         "http://localhost:8080/smr",
         {
           params: {
-            latitude: coordinates.lat,
-            longitude: coordinates.lng,
-            rate: discountRate,
-            years: yearsOfModeling,
-            model: modelName,
-            num_units: numUnits,
+            lat: coordinates.lat,
+            long: coordinates.lng,
+            discount_rate: Number(discount_rate)/100,
+            years_of_modelling: Number(years_of_modelling),
+            model_name: model_name,
+            num_units: Number(num_units),
           },
           withCredentials: false
         }
       );
 
+      // Log Backend results
+      console.log("Backend response data:", response.data[0], "Type:", Array.isArray(response.data[0]));
+
+
       // Set backend results
-      setSMRCalcValues(response.data);
+      setSMRCalcValues(response.data[0]);
 
       // Set input values for results page
       setSMRInputValues({
-        modelName,
-        numUnits,
-        discountRate,
-        yearsOfModeling,
         latitude: coordinates.lat,
         longitude: coordinates.lng,
+        model_name: model_name,
+        num_units: num_units,
+        discount_rate: discount_rate,
+        years_of_modelling: years_of_modelling,
+
       });
 
     } catch (err) {
@@ -143,10 +150,10 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
     setIsLoading(false);
   }, [
     coordinates,
-    discountRate,
-    yearsOfModeling,
-    modelName,
-    numUnits,
+    model_name,
+    num_units,
+    discount_rate,
+    years_of_modelling,
     setSMRCalcValues,
     setSMRInputValues
   ]);
@@ -184,8 +191,8 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
             </label>
             <select
               className="mt-1 block w-2/3 p-2 border border-gray-700 rounded-3xl text-center bg-blue-500 text-white"
-              value={modelName}
-              onChange={(e) => setModelName(e.target.value)}
+              value={model_name}
+              onChange={(e) => setModel_name(e.target.value)}
             >
               <option value="NUSCALE POWER MODULE">NuScale Power Module</option>
               <option value="HOLTEC">Holtec SMR-300</option>
@@ -197,11 +204,11 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
           <InputWithLabel
             label="Number of Units"
             id="numUnits"
-            value={numUnits}
+            value={num_units}
             type="number"
             min="1"
             step={1}
-            onChange={(e) => setNumUnits(e.target.value)}
+            onChange={(e) => setNum_units(e.target.value)}
           />
         </section>
 
@@ -212,26 +219,26 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
 
           <InputWithLabel
             label="Discount Rate (%)"
-            id="discountRate"
-            value={discountRate}
+            id="discount_rate"
+            value={discount_rate}
             type="number"
             min="0"
             max="100"
             step={1}
             onChange={(e) => {
               const val = Number(e.target.value);
-              if (val >= 0 && val <= 100) setDiscountRate(e.target.value);
+              if (val >= 0 && val <= 100) setDiscount_rate(e.target.value);
             }}
           />
 
           <InputWithLabel
-            label="Years of Modeling"
-            id="yearsOfModeling"
-            value={yearsOfModeling}
+            label="Years of Modelling"
+            id="years_of_modelling"
+            value={years_of_modelling}
             type="number"
             min="1"
             step={1}
-            onChange={(e) => setYearsOfModeling(e.target.value)}
+            onChange={(e) => setYears_of_modelling(e.target.value)}
           />
         </section>
 
