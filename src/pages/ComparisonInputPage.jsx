@@ -77,14 +77,18 @@ export const MapComponent = ({ coordinates, setCoordinates }) => {
 };
 
 // Comparison Input Section
+// Initialize Input
 const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues,}) => {
   const [coordinates, setCoordinates] = useState({
     lat: 50.671,
     lng: -120.332,
   });
-
-  const [avgMWDemand, setAvgMWDemand] = useState("300");
+  const [target_demand_mw, setTarget_demand_mw] = useState([200, 200, 200, 200]);
   const [isLoading, setIsLoading] = useState(false);
+  const [rate, setRate] = useState(5);
+  const [analysis_period, setAnalysis_period] = useState(30);
+  const [existing_capacity_mw, setExisting_capacity_mw] = useState(0);
+  const [standby_lcoe_kwh, setStandby_lcoe_kwh] = useState(150);
 
   // Clear results when leaving page
   useEffect(() => {
@@ -100,24 +104,48 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
     setComparisonInputValues(null);
 
     try {
+
+    // Whats being send to backend
+    console.log("Sending to backend:", {
+    latitude: coordinates.lat,
+    longitude: coordinates.lng,
+    target_demand_mw: target_demand_mw,
+    analysis_period: Number(analysis_period),
+    discount_rate: Number(rate)/100,
+    existing_capacity_mw: Number(existing_capacity_mw),
+    standby_lcoe_kwh: Number(standby_lcoe_kwh)
+    });
+  
       const response = await axios.get(
-        "http://localhost:8080/Comparison",
+        "http://localhost:8080/recommend",
         {
           params: {
             latitude: coordinates.lat,
             longitude: coordinates.lng,
-            avg_mw_demand: avgMWDemand,
+            target_demand_mw: target_demand_mw.join(","),
+            existing_capacity_mw: Number(existing_capacity_mw),
+            standby_lcoe_kwh: Number(standby_lcoe_kwh),
+            discount_rate: Number(rate)/100,
+            analysis_period: Number(analysis_period)
+          },
+          // prevents [] brackets in url
+          paramsSerializer:{
+            indexes:null
           },
           withCredentials: false,
         }
       );
+
+      // Log Backend results
+      console.log("Backend response data:", response.data);
+
 
       // Set backend results
       setComparisonCalcValues(response.data);
 
       // Set input values for result page
       setComparisonInputValues({
-        avgMWDemand,
+        target_demand_mw: target_demand_mw,
         latitude: coordinates.lat,
         longitude: coordinates.lng,
       });
@@ -128,7 +156,7 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
     setIsLoading(false);
   }, [
     coordinates,
-    avgMWDemand,
+    target_demand_mw,
     setComparisonCalcValues,
     setComparisonInputValues,
   ]);
@@ -163,104 +191,59 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
           <SectionTitle title="Electricity Demand" />
 
           <InputWithLabel
-            label="January Monthly Demand (MW)"
-            id="avgMWDemand"
-            value={avgMWDemand}
+            label="1st Quarter Demand (MW)"
+            id="target_demand_mw"
+            value={target_demand_mw[0]}
             type="number"
             min="1"
             step="1"
-            onChange={(e) => setAvgMWDemand(e.target.value)}
+            onChange={(e) => {
+              const new_demand = [...target_demand_mw];
+              new_demand[0] = Number(e.target.value);
+              setTarget_demand_mw(new_demand)
+            }}
           />
           <InputWithLabel
-            label="February Monthly Demand (MW)"
-            id="avgMWDemand"
-            value={avgMWDemand}
+            label="2nd Quarter Demand (MW)"
+            id="target_demand_mw"
+            value={target_demand_mw[1]}
             type="number"
             min="1"
             step="1"
-            onChange={(e) => setAvgMWDemand(e.target.value)}
+            onChange={(e) => {
+              const new_demand = [...target_demand_mw];
+              new_demand[1] = Number(e.target.value);
+              setTarget_demand_mw(new_demand)
+            }}
           />
           <InputWithLabel
-            label="March Monthly Demand (MW)"
-            id="avgMWDemand"
-            value={avgMWDemand}
+            label="3rd Quarter Demand (MW)"
+            id="target_demand_mw"
+            value={target_demand_mw[2]}
             type="number"
             min="1"
             step="1"
-            onChange={(e) => setAvgMWDemand(e.target.value)}
+            onChange={(e) => {
+              const new_demand = [...target_demand_mw];
+              new_demand[2] = Number(e.target.value);
+              setTarget_demand_mw(new_demand)
+            }}
           />
           <InputWithLabel
-            label="April Monthly Demand (MW)"
-            id="avgMWDemand"
-            value={avgMWDemand}
+            label="4th Quarter Demand (MW)"
+            id="target_demand_mw"
+            value={target_demand_mw[3]}
             type="number"
             min="1"
             step="1"
-            onChange={(e) => setAvgMWDemand(e.target.value)}
+            onChange={(e) => {
+              const new_demand = [...target_demand_mw];
+              new_demand[3] = Number(e.target.value);
+              setTarget_demand_mw(new_demand)
+            }}
           />
-          <InputWithLabel
-            label="May Monthly Demand (MW)"
-            id="avgMWDemand"
-            value={avgMWDemand}
-            type="number"
-            min="1"
-            step="1"
-            onChange={(e) => setAvgMWDemand(e.target.value)}
-          />
-          <InputWithLabel
-            label="June Monthly Demand (MW)"
-            id="avgMWDemand"
-            value={avgMWDemand}
-            type="number"
-            min="1"
-            step="1"
-            onChange={(e) => setAvgMWDemand(e.target.value)}
-          />
-          <InputWithLabel
-            label="July Monthly Demand (MW)"
-            id="avgMWDemand"
-            value={avgMWDemand}
-            type="number"
-            min="1"
-            step="1"
-            onChange={(e) => setAvgMWDemand(e.target.value)}
-          />
-          <InputWithLabel
-            label="August Monthly Demand (MW)"
-            id="avgMWDemand"
-            value={avgMWDemand}
-            type="number"
-            min="1"
-            step="1"
-            onChange={(e) => setAvgMWDemand(e.target.value)}
-          />
-          <InputWithLabel
-            label="September Monthly Demand (MW)"
-            id="avgMWDemand"
-            value={avgMWDemand}
-            type="number"
-            min="1"
-            step="1"
-            onChange={(e) => setAvgMWDemand(e.target.value)}
-          />
-          <InputWithLabel
-            label="November Monthly Demand (MW)"
-            id="avgMWDemand"
-            value={avgMWDemand}
-            type="number"
-            min="1"
-            step="1"
-            onChange={(e) => setAvgMWDemand(e.target.value)}
-          />
-          <InputWithLabel
-            label="December Monthly Demand (MW)"
-            id="avgMWDemand"
-            value={avgMWDemand}
-            type="number"
-            min="1"
-            step="1"
-            onChange={(e) => setAvgMWDemand(e.target.value)}
-          />
+        </section>
+
         {/* Financial Parameters */}
         <section className="mb-6">
           <SectionDivider />
@@ -268,29 +251,54 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
 
           <InputWithLabel
             label="Discount Rate (%)"
-            id="discountRate"
-            value={discountRate}
+            id="rate"
+            value={rate}
             type="number"
             min="0"
             max="100"
             step={1}
             onChange={(e) => {
               const val = Number(e.target.value);
-              if (val >= 0 && val <= 100) setDiscountRate(e.target.value);
+              if (val >= 0 && val <= 100) setRate(e.target.value);
             }}
           />
-
           <InputWithLabel
-            label="Years of Modeling"
-            id="yearsOfModeling"
-            value={yearsOfModeling}
+            label="Years of Modelling"
+            id="analysis_period"
+            value={analysis_period}
             type="number"
             min="1"
             step={1}
-            onChange={(e) => setYearsOfModeling(e.target.value)}
+            onChange={(e) => setAnalysis_period(e.target.value)}
           />
         </section>
+
+        {/* Demand Section */}
+        <section className="mb-6">
+          <SectionDivider />
+          <SectionTitle title="Standby Generation" />
+
+          <InputWithLabel
+            label="Spare Standby Capacity (MWh)"
+            id="existing_capacity_mw"
+            value={existing_capacity_mw}
+            type="number"
+            min="1"
+            step="1"
+            onChange={(e) => setExisting_capacity_mw(e.target.value)}
+          />
+          <InputWithLabel
+            label="Standby Generation Cost ($/MWh)"
+            id="standby_lcoe_kwh"
+            value={standby_lcoe_kwh}
+            type="number"
+            min="1"
+            step="1"
+            onChange={(e) => setStandby_lcoe_kwh(e.target.value)}
+          />
+          
         </section>
+        
         <SectionDivider />
 
         <div className="sticky bottom-0 bg-gray-200 pt-3 pb-2 z-10">

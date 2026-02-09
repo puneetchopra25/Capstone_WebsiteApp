@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { FileText } from "lucide-react";
+// import ComparisonInputPage from "./ComparisonInputPage";
 
 // Provinces / states where nuclear is restricted
 const NUCLEAR_BANNED_PROVINCES = [
@@ -34,155 +35,135 @@ const getProvinceFromCoordinates = async (lat, lng) => {
 };
 
 const ComparisonOutputPage = ({ ComparisonCalcValues, ComparisonInputValues }) => {
+  //const [comparisonData, setComparisonData] = useState(null);
+  const [all_results, setAll_results] = useState([]);
+  const [error, setError] = useState(null);
   const [province, setProvince] = useState(null);
   const [nuclearBanned, setNuclearBanned] = useState(false);
   const contentRef = useRef(null);
 
-  // Location legality check
-
+  // Process Comparison results
   useEffect(() => {
-    const runCheck = async () => {
-      if (!ComparisonInputValues) return;
-      const prov = await getProvinceFromCoordinates(
-        ComparisonInputValues.latitude,
-        ComparisonInputValues.longitude
-      );
-      setProvince(prov);
-      setNuclearBanned(NUCLEAR_BANNED_PROVINCES.includes(prov));
-    };
-    runCheck();
-  }, [ComparisonInputValues]);
+    if (ComparisonCalcValues && ComparisonCalcValues.length > 0){
+      setAll_results(ComparisonCalcValues);
+      console.log("Rank results", ComparisonCalcValues);
+    }
+  }, [ComparisonCalcValues])
 
-  // Rank SMRs by LCOE
+    // Location legality check
+    useEffect(() => {
+      const checkProvince = async () => {
+        if (!ComparisonInputValues) return;
+        const prov = await getProvinceFromCoordinates(
+          ComparisonInputValues.latitude,
+          ComparisonInputValues.longitude
+        );
+        setProvince(prov);
+        setNuclearBanned(NUCLEAR_BANNED_PROVINCES.includes(prov));
+      };
+      checkProvince();
+    }, [ComparisonInputValues]);
 
-  const rankedSMRs = ComparisonCalcValues?.results
-    ?.slice()
-    ?.sort((a, b) => a.lcoe - b.lcoe);
-
-  // Hitachi cooling water check
-  // Assumption: must be within 10 km of large body of water
-  const hitachiWaterOK =
-    ComparisonInputValues?.distanceToWater_km !== undefined
-      ? ComparisonInputValues.distanceToWater_km <= 10
-      : false;
-
-  // PDF export
-
+  // PDF download
   const downloadPDF = async () => {
     if (!contentRef.current) return;
+
+    // Content
     const canvas = await html2canvas(contentRef.current, {
       scale: 2,
       useCORS: true,
-      scrollY: -window.scrollY
+      scrollY: -window.scrollY,
     });
-    const img = canvas.toDataURL("image/png");
-    const pdf = new jsPDF();
-    const width = pdf.internal.pageSize.getWidth();
-    const height = (canvas.height * width) / canvas.width;
-    pdf.addImage(img, "PNG", 0, 0, width, height);
-    pdf.save("PURESIM_Comparison_Results.pdf");
+
+    const imgData = canvas.toDataURL("image/png");
+
+    // Create PDF size
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    // Page dimensions
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 5;
+
+    // Image dimensions
+    const imgWidth = pageWidth - margin * 2;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = margin;
+
+    pdf.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight - margin * 2;
+
+    pdf.save("SMR Energy Results.pdf");
   };
 
-
-  if (!ComparisonCalcValues)
-    return <div className="p-6 text-center">Run simulation to view Comparison results.</div>;
+  // Loading and error states
+  if (!all_results || all_results.length === 0) {
+    return <div className="p-6 text-center">Loading comparison results...</div>;
+  }
 
   // UI
-
   return (
-    <div
-      ref={contentRef}
-      className="py-8 px-4 mx-auto max-w-7xl space-y-6"
-    >
-      {/* Regulatory Disclaimer */}
-      <div className="bg-yellow-50 border border-yellow-400 text-yellow-900 p-4 rounded-xl">
-        <strong>Regulatory Disclaimer</strong>
-        <p className="text-sm mt-1">
-          Nuclear legality is evaluated at the provincial/state level only.
-          Federal, municipal, and indigenous approvals are not assessed.
-        </p>
-        <p className="text-sm mt-1">
-          Location detected: <strong>{province || "Unknown"}</strong>
-        </p>
-        {nuclearBanned && (
-          <p className="text-sm text-red-700 mt-2">
-            ⚠ Nuclear reactors are restricted in this jurisdiction.
-          </p>
-        )}
-      </div>
-
-      {/* Title */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold">
-          SMR Economic Ranking (Lowest LCOE)
-        </h2>
+    <div className="py-8 px-4 mx-auto max-w-7xl" style={{ maxHeight: "calc(113vh - 100px)", overflowY: "scroll" }}>
+      
+      {/*Download PDF Button*/}
+      <div className="col-span-1 flex justify-end items-start mb-2">
         <button
           onClick={downloadPDF}
-          className="flex items-center py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl shadow"
-        >
+          className="flex items-center py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl transition duration-300 ease-in-out text-base shadow-lg">
           Download PDF
           <FileText className="ml-2 w-5 h-5" />
         </button>
       </div>
+      
+    <div ref={contentRef}>
+      <div className="pdf-wrapper">
 
-      {/* Ranked SMRs */}
-      <div className="space-y-4">
-        {rankedSMRs.map((smr, idx) => (
-          <div
-            key={`${smr.vendor}-${smr.model}`}
-            className={`rounded-xl p-5 shadow-md border ${
-              idx === 0
-                ? "border-green-500 bg-green-50"
-                : "border-gray-200 bg-white"
-            }`}
-          >
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-bold">
-                #{idx + 1} {smr.vendor} – {smr.model}
-              </h3>
-              <span className="font-semibold text-lg">
-                LCOE: ${smr.lcoe}/MWh
-              </span>
-            </div>
+      {/* Nuclear ban warning */}
+      {nuclearBanned && (
+        <div className="bg-red-100 border-2 border-red-600 text-red-800 p-4 rounded-xl mb-4 mt-2">
+          <strong>Nuclear reactors are restricted province/state-wide.</strong>
+          <div className="text-sm mt-1">Selected province: {province}</div>
+        </div>
+      )}
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 text-sm">
-              <div>
-                <span className="text-gray-500">Annual Energy</span>
-                <div>{smr.annual_energy.toLocaleString()} MWh</div>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            {all_results.slice(0,3).map((res, index) => (
+              <div className="bg-white rounded-lg shadow-md col-span-1">
+                <div className="bg-gray-200 px-5 py-3">
+                  <h3 className="text-xl font-bold text-gray-800 text-center">Rank {res.rank || index + 1}</h3>
+                </div>
+                
+                <div className="px-6 py-4">
+                  <div className="mb-3">
+                    <span className="text-base font-medium text-gray-600">Configuration</span>
+                    <span className="block font-semibold text-lg text-gray-800 leading-tight">
+                      {res.configuration}
+                    </span>
+                  </div>
 
-              <div>
-                <span className="text-gray-500">Capital Cost</span>
-                <div>${smr.capital_cost.toLocaleString()}</div>
-              </div>
+                  <div className="mb-3">
+                    <span className="text-base font-medium text-gray-600">Total Score Cost</span>
+                    <span className="block font-semibold text-lg text-gray-800">
+                      {res.total_score_cost_millions?.toLocaleString()} M$
+                    </span>
+                  </div>
 
-              <div>
-                <span className="text-gray-500">Cooling Required</span>
-                <div>{smr.cooling_required ? "Yes" : "No"}</div>
-              </div>
-
-              <div>
-                <span className="text-gray-500">Site Legal</span>
-                <div className={nuclearBanned ? "text-red-600" : "text-green-600"}>
-                  {nuclearBanned ? "No" : "Yes"}
+                  <div className="mb-3">
+                    <span className="text-base font-medium text-gray-600">Standby Power Generation</span>
+                    <span className="block font-semibold text-lg text-gray-800">
+                      {res.annual_unmet_demand_mwh?.toLocaleString()} MWh
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Hitachi-specific cooling constraint */}
-            {smr.vendor === "Hitachi" && (
-              <div
-                className={`mt-3 text-sm ${
-                  hitachiWaterOK ? "text-green-700" : "text-red-700"
-                }`}
-              >
-                {hitachiWaterOK
-                  ? "Cooling water requirement satisfied"
-                  : "Insufficient proximity to large body of water"}
-              </div>
-            )}
+            ))}
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );

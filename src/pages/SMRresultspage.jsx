@@ -68,7 +68,7 @@ const SMRResultsPage = ({ SMRCalcValues, SMRInputValues }) => {
           annual_cost: res.net_annual_cost_millions_yr || 0,
           annual_recurring_cost: res.net_annual_recurring_cost_millions_yr || 0,
           net_present_value_cost: res.net_present_value_cost_millions || 0,
-          lcoe: res.lcoe || 0,         
+          lcoe: res.lcoe_kwh || 0,         
         });
 
       } catch (err) {
@@ -160,7 +160,14 @@ const downloadPDF = async () => {
       {nuclearBanned && (
         <div className="bg-red-100 border-2 border-red-600 text-red-800 p-4 rounded-xl mb-4 mt-2">
           <strong>Nuclear reactors are restricted province/state-wide.</strong>
-          <div className="text-sm mt-1">Selected province: {province}</div>
+          <div className="text-sm mt-1">Selected province/state: {province}</div>
+        </div>
+      )}
+      {/* No nearby body of water warning */}
+      {nuclearBanned && (
+        <div className="bg-red-100 border-2 border-red-600 text-red-800 p-4 rounded-xl mb-4 mt-2">
+          <strong>SMR requires nearby body of water for cooling.</strong>
+          <div className="text-sm mt-1">Selected area: {province}</div>
         </div>
       )}
 {/*
