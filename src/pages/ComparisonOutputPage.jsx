@@ -156,7 +156,7 @@ const ComparisonOutputPage = ({ ComparisonCalcValues, ComparisonInputValues }) =
                   <div className="mb-3">
                     <span className="text-base font-medium text-gray-600">Standby Power Generation</span>
                     <span className="block font-semibold text-lg text-gray-800">
-                      {res.annual_unmet_demand_mwh?.toLocaleString()} MWh
+                      {res.annual_unmet_demand_mwh?.toLocaleString()} MWh/yr
                     </span>
                   </div>
                 </div>

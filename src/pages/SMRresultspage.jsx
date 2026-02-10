@@ -44,9 +44,10 @@ const SMRResultsPage = ({ SMRCalcValues, SMRInputValues }) => {
 
   // Process SMR calculation results
   useEffect(() => {
-    if (SMRCalcValues && SMRCalcValues.results) {
+    if (SMRCalcValues && SMRCalcValues.results && SMRCalcValues.location_info) {
       const res = SMRCalcValues.results;
-      console.log("Backend results:", SMRCalcValues.results);
+      const model = SMRCalcValues.location_info;
+      console.log("Backend results:", SMRCalcValues.results, SMRCalcValues.location_info);
 
       try {
         setSmrData({
@@ -58,6 +59,7 @@ const SMRResultsPage = ({ SMRCalcValues, SMRInputValues }) => {
           unit_refuel_cost: res.unit_fuel_cost_usd || 0,
           cooling_required: res.cooling_required ? "Yes" : "No",
 
+
           // Energy results
           annual_energy_output: res.avg_annual_generation_mwh || 0,
           monthly_generation: Array(12).fill((res.avg_annual_generation_mwh || 0) / 12),
@@ -68,7 +70,8 @@ const SMRResultsPage = ({ SMRCalcValues, SMRInputValues }) => {
           annual_cost: res.net_annual_cost_millions_yr || 0,
           annual_recurring_cost: res.net_annual_recurring_cost_millions_yr || 0,
           net_present_value_cost: res.net_present_value_cost_millions || 0,
-          lcoe: res.lcoe_kwh || 0,         
+          lcoe: res.lcoe_kwh || 0,
+          cooling_water_warning: model.cooling_water_warning || 0
         });
 
       } catch (err) {
@@ -137,7 +140,7 @@ const downloadPDF = async () => {
   if (!smrData) return <div className="p-6 text-center">Loading SMR results...</div>;
 
   const { annual_energy_output, monthly_generation, capital_cost, annual_cost, annual_recurring_cost, 
-    net_present_value_cost, lcoe, unit_power, refuel_cycle, cooling_required} = smrData;
+    net_present_value_cost, lcoe, unit_power, refuel_cycle, cooling_required, cooling_water_warning} = smrData;
   const maxGen = Math.max(...monthly_generation || [0]);
 
   return (
@@ -164,10 +167,10 @@ const downloadPDF = async () => {
         </div>
       )}
       {/* No nearby body of water warning */}
-      {nuclearBanned && (
+      {cooling_water_warning && cooling_required == "Yes" &&(
         <div className="bg-red-100 border-2 border-red-600 text-red-800 p-4 rounded-xl mb-4 mt-2">
           <strong>SMR requires nearby body of water for cooling.</strong>
-          <div className="text-sm mt-1">Selected area: {province}</div>
+          <div className="text-sm mt-1">Selected area: {province}. No sufficient water source found within 10km</div>
         </div>
       )}
 {/*

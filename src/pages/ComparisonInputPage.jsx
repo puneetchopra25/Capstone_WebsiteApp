@@ -88,7 +88,7 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
   const [rate, setRate] = useState(5);
   const [analysis_period, setAnalysis_period] = useState(30);
   const [existing_capacity_mw, setExisting_capacity_mw] = useState(0);
-  const [standby_lcoe_kwh, setStandby_lcoe_kwh] = useState(150);
+  const [standby_lcoe_kwh, setStandby_lcoe_kwh] = useState(300);
 
   // Clear results when leaving page
   useEffect(() => {
