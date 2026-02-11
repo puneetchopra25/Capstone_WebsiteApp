@@ -80,8 +80,8 @@ export const MapComponent = ({ coordinates, setCoordinates }) => {
 // Initialize Input
 const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues,}) => {
   const [coordinates, setCoordinates] = useState({
-    lat: 50.671,
-    lng: -120.332,
+    lat: 43.648,
+    lng: -79.384,
   });
   const [target_demand_mw, setTarget_demand_mw] = useState([200, 200, 200, 200]);
   const [isLoading, setIsLoading] = useState(false);

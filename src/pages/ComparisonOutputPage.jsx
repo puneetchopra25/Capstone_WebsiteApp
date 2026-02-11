@@ -2,7 +2,6 @@ import { useEffect, useState, useRef } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { FileText } from "lucide-react";
-// import ComparisonInputPage from "./ComparisonInputPage";
 
 // Provinces / states where nuclear is restricted
 const NUCLEAR_BANNED_PROVINCES = [
@@ -35,9 +34,7 @@ const getProvinceFromCoordinates = async (lat, lng) => {
 };
 
 const ComparisonOutputPage = ({ ComparisonCalcValues, ComparisonInputValues }) => {
-  //const [comparisonData, setComparisonData] = useState(null);
   const [all_results, setAll_results] = useState([]);
-  const [error, setError] = useState(null);
   const [province, setProvince] = useState(null);
   const [nuclearBanned, setNuclearBanned] = useState(false);
   const contentRef = useRef(null);

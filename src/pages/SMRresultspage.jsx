@@ -4,18 +4,23 @@ import jsPDF from "jspdf";
 import { FileText } from "lucide-react";
 
 
-// Provinces where nuclear reactors are banned
+// Provinces/states where nuclear reactors are restricted
 const NUCLEAR_BANNED_PROVINCES = [
   "British Columbia",
   "Nova Scotia",
   "Quebec",
   "California",
+  "Connecticut",
+  "Hawaii",
+  "Maine",
+  "Massachusetts",
   "Minnesota",
+  "New Jersey",
   "Oregon",
-  "Maine"
+  "Rhode Island",
+  "Vermont"
 ];
 
-// Replace with your Mapbox token
 const MAPBOX_ACCESS_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
 // Helper to get province from coordinates
@@ -167,20 +172,12 @@ const downloadPDF = async () => {
         </div>
       )}
       {/* No nearby body of water warning */}
-      {cooling_water_warning && cooling_required == "Yes" &&(
+      {cooling_water_warning === true && cooling_required === "Yes" &&(
         <div className="bg-red-100 border-2 border-red-600 text-red-800 p-4 rounded-xl mb-4 mt-2">
           <strong>SMR requires nearby body of water for cooling.</strong>
-          <div className="text-sm mt-1">Selected area: {province}. No sufficient water source found within 10km</div>
+          <div className="text-sm mt-1">Selected area: No sufficient water source found within 6km</div>
         </div>
       )}
-{/*
-       No body of water near Warning 
-      {coolingWarning && (
-        <div className="bg-red-100 border-2 border-red-600 text-red-800 p-4 rounded-xl mb-4 mt-2">
-          <strong>This SMR requires cooling water, but the location is not near a body of water.</strong>
-        </div>
-      )}
-*/}
       {/* Energy Results */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-white rounded-lg shadow-md col-span-1">
