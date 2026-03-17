@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { FileText } from "lucide-react";
+import { FileText, HelpCircle } from "lucide-react";
 
 
 // Provinces/states where nuclear reactors are restricted
@@ -226,11 +226,20 @@ const downloadPDF = async () => {
                 {annual_cost?.toLocaleString() ?? "0"} M$/yr
                 </span>
             </div>
-            <div className="mb-3">
-              <span className="text-base font-medium text-gray-600">LCOE:</span>
+            <div className="mb-3 relative group">
+              <span className="flex items-center text-base font-medium text-gray-600 cursor-help">
+                LCOE:<HelpCircle className="w-5 h-4 mr-5" />
+              </span>
+              <div className="invisible group-hover:visible absolute bottom-full left-0 mb-2 w-64 p-3 bg-gray-200 text-white text-sm rounded-lg shadow-xl z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                <p className="leading-relaxed text-gray-800">
+                  Levelized Cost of Energy represents the average net present cost of 
+                  electricity generation for a power plant over its lifetime. 
+                  It is calculated as total lifetime costs divided by total energy output.
+                </p>
+              </div>
               <span className="block font-semibold text-lg text-gray-800">
                 {lcoe?.toLocaleString() ?? "0"} $/kWh
-                </span>
+              </span>
             </div>
           </div>
         </div>

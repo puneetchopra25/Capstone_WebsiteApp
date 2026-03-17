@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { FileText } from "lucide-react";
+import { FileText, HelpCircle } from "lucide-react";
 
 // Provinces / states where nuclear is restricted
 const NUCLEAR_BANNED_PROVINCES = [
@@ -106,9 +106,26 @@ const ComparisonOutputPage = ({ ComparisonCalcValues, ComparisonInputValues }) =
   // UI
   return (
     <div className="py-8 px-4 mx-auto max-w-7xl" style={{ maxHeight: "calc(113vh - 100px)", overflowY: "scroll" }}>
-      
-      {/*Download PDF Button*/}
-      <div className="col-span-1 flex justify-end items-start mb-2">
+     
+      <div className="flex justify-end items-center gap-6 mb-6 px-2">
+
+        {/* FAQ */}
+        <div className="group relative flex items-center text-gray-800 cursor-help transition-colors hover:text-blue-700">
+          <HelpCircle className="w-5 h-5 mr-2" />
+          <span className="text-base font-medium border-b border-dotted border-gray-400">
+            How are these ranked?
+          </span>
+          <div className="invisible group-hover:visible absolute top-full right-0 mt-2 w-80 p-4 bg-gray-200 text-white text-sm rounded-lg shadow-xl z-50 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none border border-gray-700">
+            <p className="leading-relaxed text-gray-800">
+              Configurations are optimal combinations of SMR and Solar units which 
+              are ranked based on their ability to meet load demand reliably 
+              while minimizing the total cost. Rank 1 is the cheapest way 
+              to reliably meet your demand over the entire project lifespan.
+            </p>
+          </div>
+        </div>  
+
+        {/*Download PDF Button*/}
         <button
           onClick={downloadPDF}
           className="flex items-center py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl transition duration-300 ease-in-out text-base shadow-lg">
@@ -144,7 +161,7 @@ const ComparisonOutputPage = ({ ComparisonCalcValues, ComparisonInputValues }) =
                   </div>
 
                   <div className="mb-3">
-                    <span className="text-base font-medium text-gray-600">Total Score Cost</span>
+                    <span className="text-base font-medium text-gray-600">Total Lifecycle Cost</span>
                     <span className="block font-semibold text-lg text-gray-800">
                       {res.total_score_cost_millions?.toLocaleString()} M$
                     </span>
