@@ -95,7 +95,7 @@ const ComparisonOutputPage = ({ ComparisonCalcValues, ComparisonInputValues }) =
     pdf.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
     heightLeft -= pageHeight - margin * 2;
 
-    pdf.save("SMR Energy Results.pdf");
+    pdf.save("Energy Recommendation Results.pdf");
   };
 
   // Loading and error states
@@ -147,7 +147,7 @@ const ComparisonOutputPage = ({ ComparisonCalcValues, ComparisonInputValues }) =
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             {all_results.slice(0,3).map((res, index) => (
-              <div className="bg-white rounded-lg shadow-md col-span-1">
+              <div key = {res.configuration || index} className="bg-white rounded-lg shadow-md col-span-1">
                 <div className="bg-gray-200 px-5 py-3">
                   <h3 className="text-xl font-bold text-gray-800 text-center">Rank {res.rank || index + 1}</h3>
                 </div>
@@ -176,6 +176,19 @@ const ComparisonOutputPage = ({ ComparisonCalcValues, ComparisonInputValues }) =
                 </div>
               </div>
             ))}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Generation Mix Plot */}
+            {all_results[0]?.generation_mix_chart && (
+              <div className="bg-white rounded-lg shadow-md p-4 mb-4 col-span-full flex flex-col items-center">
+                <img
+                  src={`data:image/png;base64,${all_results[0].generation_mix_chart}`}
+                  alt="Generation Mix Chart"
+                  style={{ width: "100%", maxWidth: "500px", height: "auto" }}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

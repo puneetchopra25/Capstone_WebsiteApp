@@ -68,7 +68,7 @@ const SMRResultsPage = ({ SMRCalcValues, SMRInputValues }) => {
           // Energy results
           annual_energy_output: res.avg_annual_generation_mwh || 0,
           monthly_generation: Array(12).fill((res.avg_annual_generation_mwh || 0) / 12),
-          chartImage: res.generation_chart_base64 || 0,
+          chartImage: res.generation_chart_base64 || null,
 
           // Financial results
           capital_cost: res.net_capital_cost_millions || 0,
@@ -76,7 +76,8 @@ const SMRResultsPage = ({ SMRCalcValues, SMRInputValues }) => {
           annual_recurring_cost: res.net_annual_recurring_cost_millions_yr || 0,
           net_present_value_cost: res.net_present_value_cost_millions || 0,
           lcoe: res.lcoe_kwh || 0,
-          cooling_water_warning: model.cooling_water_warning || 0
+          cooling_water_warning: model.cooling_water_warning || 0,
+          costImage: res.cost_chart_base64 || null
         });
 
       } catch (err) {
@@ -118,7 +119,7 @@ const downloadPDF = async () => {
   const pdf = new jsPDF({
     orientation: "portrait",
     unit: "mm",
-    format: "a4",
+    format: [210, 350],
   });
 
   // Page dimensions
@@ -265,13 +266,23 @@ const downloadPDF = async () => {
           </div>
         </div>
 
-        {/*Plot*/}
+        {/* Generation Plot */}
         {smrData.chartImage && (
-          <div className="bg-white rounded-lg shadow-md p-4 mb-8 col-span-full">
+          <div className="bg-white rounded-lg shadow-md p-4 mb-4 col-span-full">
             <img
               src={`data:image/png;base64,${smrData.chartImage}`}
               alt="Generation Chart"
               style={{ width: "100%", height: "auto", display: "block", margin: "0 auto" }}
+            />
+          </div>
+        )}
+        {/* Cost Distribution Plot */}
+        {smrData.costImage && (
+          <div className="bg-white rounded-lg shadow-md p-4 mb-4 col-span-full flex flex-col items-center">
+            <img
+              src={`data:image/png;base64,${smrData.costImage}`}
+              alt="Cost Distribution Chart"
+              style={{ width: "100%", maxWidth: "500px", height: "auto", display: "block" }}
             />
           </div>
         )}
