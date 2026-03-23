@@ -3,34 +3,34 @@ import jsPDF from "jspdf";
 import { useRef } from "react";
 import { FileText } from "lucide-react";
 
-const monthLabels = [
-  "Jan","Feb","Mar","Apr","May","Jun",
-  "Jul","Aug","Sep","Oct","Nov","Dec"
-];
-
-const SMRResultsPage = ({ smrCalcValues }) => {
+const SolarResultsPage = ({ solarCalcValues, solarPlotImage, cashflowPlotImage, omcostPlotImage, recieptPlotImage }) => {
   const contentRef = useRef(null);
 
-  if (!smrCalcValues) {
+  if (!solarCalcValues) {
     return (
       <div className="flex justify-center items-center h-full text-gray-600 p-6">
-        No SMR results available.
+        No solar results available.
       </div>
     );
   }
 
+  // Map API response to component fields
   const {
-    annual_energy_output,
-    annual_cost,
-    lcoe,
-    monthly_generation,
-    monthly_cost,
-    model_name,
-    num_units,
-  } = smrCalcValues;
+    annual_energy_s,
+    capacity_factor_solar,
+    gen_Rev,
+    initial_cost,
+    main_cost,
+    payback_period,
+  } = solarCalcValues;
 
-  const maxGen = Math.max(...monthly_generation);
-  const maxCost = Math.max(...monthly_cost);
+  // Parse string values with commas to numbers
+  const annualEnergyOutput = annual_energy_s ? parseFloat(annual_energy_s.replace(/,/g, '')) : 0;
+  const annualCost = initial_cost ? parseFloat(initial_cost.replace(/,/g, '')) : 0;
+  const annualRevenue = gen_Rev ? parseFloat(gen_Rev.replace(/,/g, '')) : 0;
+  
+  // For LCOE calculation, we'll use the annual cost divided by annual energy
+  const lcoe = annualEnergyOutput > 0 ? (annualCost / annualEnergyOutput) / 1000 : 0;
 
   const downloadPDF = async () => {
     if (contentRef.current) {
@@ -56,7 +56,7 @@ const SMRResultsPage = ({ smrCalcValues }) => {
 
       const imgData = canvas.toDataURL("image/png");
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save("results_smr.pdf");
+      pdf.save("results_solar.pdf");
     }
   };
 
@@ -65,13 +65,13 @@ const SMRResultsPage = ({ smrCalcValues }) => {
       className="py-8 px-4 mx-auto max-w-7xl"
       style={{ maxHeight: "calc(113vh - 100px)", overflowY: "scroll" }}
     >
-      {/* -------- Top Section: Calculation + Cost + Download ------- */}
+          {/* -------- Top Section: Calculation + Cost + Download ------- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         {/* Energy Results */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden col-span-1">
           <div className="bg-gray-200 px-5 py-3">
             <h3 className="text-xl font-bold text-gray-800 text-center">
-              SMR Energy Results
+              Solar Energy Results
             </h3>
           </div>
           <div className="px-6 py-4">
@@ -82,7 +82,17 @@ const SMRResultsPage = ({ smrCalcValues }) => {
                 Annual Energy Output
               </span>
               <span className="block font-semibold text-lg text-gray-800">
-                {annual_energy_output.toLocaleString()} MWh/yr
+                {annualEnergyOutput.toLocaleString()} MWh/yr
+              </span>
+            </div>
+
+            {/* Capacity Factor */}
+            <div className="mb-3">
+              <span className="text-base font-medium text-gray-600">
+                Capacity Factor
+              </span>
+              <span className="block font-semibold text-lg text-gray-800">
+                {capacity_factor_solar || 0}%
               </span>
             </div>
 
@@ -92,27 +102,7 @@ const SMRResultsPage = ({ smrCalcValues }) => {
                 LCOE
               </span>
               <span className="block font-semibold text-lg text-gray-800">
-                ${lcoe.toFixed(3)} / kWh
-              </span>
-            </div>
-
-            {/* Number of Units */}
-            <div className="mb-3">
-              <span className="text-base font-medium text-gray-600">
-                Number of SMR Units
-              </span>
-              <span className="block font-semibold text-lg text-gray-800">
-                {num_units}
-              </span>
-            </div>
-
-            {/* Model Name */}
-            <div className="mb-3">
-              <span className="text-base font-medium text-gray-600">
-                SMR Model
-              </span>
-              <span className="block font-semibold text-lg text-gray-800">
-                {model_name}
+                ${lcoe?.toFixed(3) || "0.000"} / kWh
               </span>
             </div>
           </div>
@@ -127,23 +117,43 @@ const SMRResultsPage = ({ smrCalcValues }) => {
           </div>
           <div className="px-6 py-4">
 
-            {/* Annual Cost */}
+            {/* Initial Cost */}
             <div className="mb-3">
               <span className="text-base font-medium text-gray-600">
-                Annual Cost:
+                Initial Cost:
               </span>
               <span className="block font-semibold text-lg text-gray-800">
-                ${annual_cost.toLocaleString()}
+                ${initial_cost?.toLocaleString() || 0}
               </span>
             </div>
 
-            {/* Cost per Month */}
+            {/* Maintenance Cost */}
             <div className="mb-3">
               <span className="text-base font-medium text-gray-600">
-                Avg. Monthly Cost:
+                Annual Maintenance:
               </span>
               <span className="block font-semibold text-lg text-gray-800">
-                ${(annual_cost / 12).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                ${main_cost?.toLocaleString() || 0}
+              </span>
+            </div>
+
+            {/* Annual Revenue */}
+            <div className="mb-3">
+              <span className="text-base font-medium text-gray-600">
+                Annual Revenue:
+              </span>
+              <span className="block font-semibold text-lg text-gray-800">
+                ${annualRevenue.toLocaleString()}
+              </span>
+            </div>
+
+            {/* Payback Period */}
+            <div className="mb-3">
+              <span className="text-base font-medium text-gray-600">
+                Payback Period:
+              </span>
+              <span className="block font-semibold text-lg text-gray-800">
+                {payback_period || 0} years
               </span>
             </div>
           </div>
@@ -171,36 +181,64 @@ const SMRResultsPage = ({ smrCalcValues }) => {
           Graphical Analysis
         </h3>
 
-        {/* -------- Monthly Generation Bar Chart -------- */}
-        <h4 className="text-lg font-semibold mb-2">Monthly Electricity Generation</h4>
-        <div className="flex items-end gap-2 h-48 mb-8">
-          {monthly_generation.map((value, idx) => (
-            <div key={idx} className="flex flex-col items-center">
-              <div
-                className="w-6 bg-blue-500 rounded-t"
-                style={{ height: `${(value / maxGen) * 100}%` }}
-              ></div>
-              <span className="text-xs mt-1">{monthLabels[idx]}</span>
+        {/* -------- Monthly Generation Plot from API -------- */}
+        {solarPlotImage && (
+          <>
+            <h4 className="text-lg font-semibold mb-2">Monthly Electricity Generation</h4>
+            <div className="mb-8">
+              <img 
+                src={solarPlotImage} 
+                alt="Monthly Generation Plot" 
+                className="w-full h-auto max-h-96 object-contain"
+              />
             </div>
-          ))}
-        </div>
+          </>
+        )}
 
-        {/* -------- Monthly Cost Bar Chart -------- */}
-        <h4 className="text-lg font-semibold mb-2">Monthly Cost</h4>
-        <div className="flex items-end gap-2 h-48 mb-8">
-          {monthly_cost.map((value, idx) => (
-            <div key={idx} className="flex flex-col items-center">
-              <div
-                className="w-6 bg-red-500 rounded-t"
-                style={{ height: `${(value / maxCost) * 100}%` }}
-              ></div>
-              <span className="text-xs mt-1">{monthLabels[idx]}</span>
+        {/* -------- Cash Flow Plot from API -------- */}
+        {cashflowPlotImage && (
+          <>
+            <h4 className="text-lg font-semibold mb-2">Cash Flow</h4>
+            <div className="mb-8">
+              <img 
+                src={cashflowPlotImage} 
+                alt="Cash Flow Plot" 
+                className="w-full h-auto max-h-96 object-contain"
+              />
             </div>
-          ))}
-        </div>
+          </>
+        )}
+
+        {/* -------- O&M Cost Plot from API -------- */}
+        {omcostPlotImage && (
+          <>
+            <h4 className="text-lg font-semibold mb-2">O&M Cost</h4>
+            <div className="mb-8">
+              <img 
+                src={omcostPlotImage} 
+                alt="O&M Cost Plot" 
+                className="w-full h-auto max-h-96 object-contain"
+              />
+            </div>
+          </>
+        )}
+
+        {/* -------- Receipt Plot from API -------- */}
+        {recieptPlotImage && (
+          <>
+            <h4 className="text-lg font-semibold mb-2">Energy Receipt</h4>
+            <div className="mb-8">
+              <img 
+                src={recieptPlotImage} 
+                alt="Receipt Plot" 
+                className="w-full h-auto max-h-96 object-contain"
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 };
 
-export default SMRResultsPage;
+export default SolarResultsPage;
