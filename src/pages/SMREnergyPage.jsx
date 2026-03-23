@@ -111,7 +111,7 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
 });
 
       const response = await axios.get(
-        "http://localhost:8080/smr",
+        "/api/smr",
         {
           params: {
             lat: coordinates.lat,

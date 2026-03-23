@@ -280,7 +280,7 @@ const WindEnergyPage = ({ setCalculatedValues }) => {
     setCalculatedValues(null); // Reset previous results before starting the new simulation
     try {
       const response = await axios.get(
-        `https://server-fluor-10.onrender.com/api/users`,
+        "/api/wind",
         {
           params: {
             systemCapacity: selectedTurbineDetails.systemCapacity,

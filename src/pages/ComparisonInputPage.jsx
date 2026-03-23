@@ -117,7 +117,7 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
     });
   
       const response = await axios.get(
-        "http://localhost:8080/recommend",
+        "/api/recommend",
         {
           params: {
             latitude: coordinates.lat,
