@@ -88,7 +88,7 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
   const [rate, setRate] = useState(5);
   const [analysis_period, setAnalysis_period] = useState(30);
   const [existing_capacity_mw, setExisting_capacity_mw] = useState(0);
-  const [standby_lcoe_kwh, setStandby_lcoe_kwh] = useState(300);
+  const [standby_lcoe_mwh, setstandby_lcoe_mwh] = useState(300);
 
   // Clear results when leaving page
   useEffect(() => {
@@ -113,7 +113,7 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
     analysis_period: Number(analysis_period),
     discount_rate: Number(rate)/100,
     existing_capacity_mw: Number(existing_capacity_mw),
-    standby_lcoe_kwh: Number(standby_lcoe_kwh)
+    standby_lcoe_mwh: Number(standby_lcoe_mwh)
     });
   
       const response = await axios.get(
@@ -124,7 +124,7 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
             longitude: coordinates.lng,
             target_demand_mw: target_demand_mw.join(","),
             existing_capacity_mw: Number(existing_capacity_mw),
-            standby_lcoe_kwh: Number(standby_lcoe_kwh),
+            standby_lcoe_mwh: Number(standby_lcoe_mwh),
             discount_rate: Number(rate)/100,
             analysis_period: Number(analysis_period)
           },
@@ -157,6 +157,10 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
   }, [
     coordinates,
     target_demand_mw,
+    rate,
+    analysis_period,
+    existing_capacity_mw,
+    standby_lcoe_mwh,
     setComparisonCalcValues,
     setComparisonInputValues,
   ]);
@@ -289,12 +293,12 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
           />
           <InputWithLabel
             label="Standby Generation Cost ($/MWh)"
-            id="standby_lcoe_kwh"
-            value={standby_lcoe_kwh}
+            id="standby_lcoe_mwh"
+            value={standby_lcoe_mwh}
             type="number"
             min="1"
             step="1"
-            onChange={(e) => setStandby_lcoe_kwh(e.target.value)}
+            onChange={(e) => setstandby_lcoe_mwh(e.target.value)}
           />
           
         </section>

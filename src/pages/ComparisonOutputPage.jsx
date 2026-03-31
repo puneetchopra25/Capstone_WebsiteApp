@@ -163,7 +163,9 @@ const ComparisonOutputPage = ({ ComparisonCalcValues, ComparisonInputValues }) =
                   <div className="mb-3">
                     <span className="text-base font-medium text-gray-600">Total Lifecycle Cost</span>
                     <span className="block font-semibold text-lg text-gray-800">
-                      {res.total_score_cost_millions?.toLocaleString()} M$
+                      ${res.total_score_cost_millions?.toLocaleString(undefined, { 
+                        maximumFractionDigits: 0 
+                      })}M
                     </span>
                   </div>
 
