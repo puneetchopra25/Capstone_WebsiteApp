@@ -147,7 +147,7 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
             indexes:null
           },
           withCredentials: false,
-          timeout: 10000
+          timeout: 60000
         }
       );
 

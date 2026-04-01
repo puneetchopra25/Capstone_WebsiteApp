@@ -136,7 +136,7 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
             num_units: Number(num_units),
           },
           withCredentials: false,
-          timeout: 10000
+          timeout: 30000
         }
       );
 
