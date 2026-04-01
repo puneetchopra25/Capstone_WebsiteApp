@@ -338,7 +338,7 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
             step="1"
             onChange={(e) => {
               setApiError(null);
-              setStandby_lcoe_kwh(e.target.value)
+              setStandby_lcoe_mwh(e.target.value)
             }}
           />
           
