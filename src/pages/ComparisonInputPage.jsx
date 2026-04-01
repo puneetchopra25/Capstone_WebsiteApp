@@ -6,6 +6,7 @@ import { SectionTitle } from "../components/SectionTitle";
 import { InputWithLabel } from "../components/InputWithLabel";
 import { DisplayWithLabel } from "../components/DisplayWithLabel";
 import { LoadingSpinnerMessage } from "../components/LoadingSpinnerMessage";
+import { ErrorDisplayMessage } from "../components/ErrorDisplayMessage";
 
 import mapboxgl from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
@@ -85,6 +86,7 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
   });
   const [target_demand_mw, setTarget_demand_mw] = useState([200, 200, 200, 200]);
   const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState(null);
   const [rate, setRate] = useState(5);
   const [analysis_period, setAnalysis_period] = useState(30);
   const [existing_capacity_mw, setExisting_capacity_mw] = useState(0);
@@ -98,13 +100,20 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
     };
   }, [setComparisonCalcValues, setComparisonInputValues]);
 
+  const handleInputChange = (setter) => (e) => {
+    setApiError(null);
+    setter(e.target.value);
+  };
+
   const handleComparison = useCallback(async () => {
     setIsLoading(true);
+    setApiError(null);
     setComparisonCalcValues(null);
     setComparisonInputValues(null);
 
     try {
 
+<<<<<<< Updated upstream
     // Whats being send to backend
     console.log("Sending to backend:", {
     latitude: coordinates.lat,
@@ -115,6 +124,24 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
     existing_capacity_mw: Number(existing_capacity_mw),
     standby_lcoe_mwh: Number(standby_lcoe_mwh)
     });
+=======
+      // Fail Test: Queue Full
+      // throw { response: { status: 429 } };
+
+      // Fail Test: Timeout
+      // throw { code: "ECONNABORTED" };
+    
+      // Whats being send to backend
+      console.log("Sending to backend:", {
+        latitude: coordinates.lat,
+        longitude: coordinates.lng,
+        target_demand_mw: target_demand_mw,
+        analysis_period: Number(analysis_period),
+        discount_rate: Number(rate)/100,
+        existing_capacity_mw: Number(existing_capacity_mw),
+        standby_lcoe_kwh: Number(standby_lcoe_kwh)
+      });
+>>>>>>> Stashed changes
   
       const response = await axios.get(
         "/api/recommend",
@@ -133,6 +160,7 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
             indexes:null
           },
           withCredentials: false,
+          timeout: 10000
         }
       );
 
@@ -150,11 +178,23 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
         longitude: coordinates.lng,
       });
     } catch (err) {
-      console.error("SMR comparison error:", err);
+
+        console.error("Comparison error:", err);
+        let message = "The simulation server is currently unavailable.";
+
+        if (err.response?.data?.message) {
+          message = err.response.data.message; 
+        }
+        else if (err.code === "ECONNABORTED") {
+          message = "The simulation timed out. Please try again later.";
+        }
+        setApiError(message);
+
     }
 
     setIsLoading(false);
   }, [
+<<<<<<< Updated upstream
     coordinates,
     target_demand_mw,
     rate,
@@ -164,14 +204,22 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
     setComparisonCalcValues,
     setComparisonInputValues,
   ]);
+=======
+      coordinates,
+      target_demand_mw,
+      setComparisonCalcValues,
+      setComparisonInputValues,
+      ]);
+>>>>>>> Stashed changes
 
   return (
     <div className="h-screen p-6 py-0 overflow-auto transition duration-500 ease-in-out bg-gray-200">
       {isLoading && <LoadingSpinnerMessage energy="Comparison" />}
+      {apiError && <ErrorDisplayMessage message={apiError} />}
 
       <div className="w-[420px] mx-auto text-gray-900">
         <div className="flex justify-center">
-          <h1 className="text-2xl font-bold p-6">SMR Comparison Tool</h1>
+          <h1 className="text-2xl font-bold p-6">Comparison Tool</h1>
         </div>
 
         {/* Location Section */}
@@ -202,6 +250,7 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
             min="1"
             step="1"
             onChange={(e) => {
+              setApiError(null);
               const new_demand = [...target_demand_mw];
               new_demand[0] = Number(e.target.value);
               setTarget_demand_mw(new_demand)
@@ -215,6 +264,7 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
             min="1"
             step="1"
             onChange={(e) => {
+              setApiError(null);
               const new_demand = [...target_demand_mw];
               new_demand[1] = Number(e.target.value);
               setTarget_demand_mw(new_demand)
@@ -228,6 +278,7 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
             min="1"
             step="1"
             onChange={(e) => {
+              setApiError(null);
               const new_demand = [...target_demand_mw];
               new_demand[2] = Number(e.target.value);
               setTarget_demand_mw(new_demand)
@@ -241,6 +292,7 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
             min="1"
             step="1"
             onChange={(e) => {
+              setApiError(null);
               const new_demand = [...target_demand_mw];
               new_demand[3] = Number(e.target.value);
               setTarget_demand_mw(new_demand)
@@ -262,6 +314,7 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
             max="100"
             step={1}
             onChange={(e) => {
+              setApiError(null);
               const val = Number(e.target.value);
               if (val >= 0 && val <= 100) setRate(e.target.value);
             }}
@@ -273,7 +326,10 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
             type="number"
             min="1"
             step={1}
-            onChange={(e) => setAnalysis_period(e.target.value)}
+            onChange={(e) => {
+              setApiError(null);
+              setAnalysis_period(e.target.value)
+            }}
           />
         </section>
 
@@ -289,7 +345,10 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
             type="number"
             min="1"
             step="1"
-            onChange={(e) => setExisting_capacity_mw(e.target.value)}
+            onChange={(e) => {
+              setApiError(null);
+              setExisting_capacity_mw(e.target.value)
+            }}
           />
           <InputWithLabel
             label="Standby Generation Cost ($/MWh)"
@@ -298,7 +357,14 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
             type="number"
             min="1"
             step="1"
+<<<<<<< Updated upstream
             onChange={(e) => setstandby_lcoe_mwh(e.target.value)}
+=======
+            onChange={(e) => {
+              setApiError(null);
+              setStandby_lcoe_kwh(e.target.value)
+            }}
+>>>>>>> Stashed changes
           />
           
         </section>

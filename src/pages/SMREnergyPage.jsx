@@ -6,6 +6,7 @@ import { SectionTitle } from "../components/SectionTitle";
 import { InputWithLabel } from "../components/InputWithLabel";
 import { DisplayWithLabel } from "../components/DisplayWithLabel";
 import { LoadingSpinnerMessage } from "../components/LoadingSpinnerMessage";
+import { ErrorDisplayMessage } from "../components/ErrorDisplayMessage";
 
 import mapboxgl from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
@@ -79,6 +80,7 @@ export const MapComponent = ({ coordinates, setCoordinates }) => {
 const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
   const [coordinates, setCoordinates] = useState({ lat: 50.671, lng: -120.332 });
   const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState(null);
 
   const [discount_rate, setDiscount_rate] = useState("5");
   const [years_of_modelling, setYears_of_modelling] = useState("25");
@@ -93,22 +95,34 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
     };
   }, [setSMRCalcValues, setSMRInputValues]);
 
+  const handleInputChange = (setter) => (e) => {
+    setApiError(null);
+    setter(e.target.value);
+  };
+
   const handleSimulation = useCallback(async () => {
     setIsLoading(true);
+    setApiError(null);
     setSMRCalcValues(null);
     setSMRInputValues(null);
 
     try {
-  
-  // Whats being send to backend
-  console.log("Sending to backend:", {
-  model_name: model_name,
-  num_units: Number(num_units),
-  lat: coordinates.lat,
-  long: coordinates.lng,
-  years_of_modelling: Number(years_of_modelling),
-  discount_rate: Number(discount_rate)/100,
-});
+       
+        // Fail Test: Queue Full
+        // throw { response: { status: 429 } };
+
+        // Fail Test: Timeout
+        // throw { code: "ECONNABORTED" };
+
+        // Whats being send to backend
+        console.log("Sending to backend:", {
+          model_name: model_name,
+          num_units: Number(num_units),
+          lat: coordinates.lat,
+          long: coordinates.lng,
+          years_of_modelling: Number(years_of_modelling),
+          discount_rate: Number(discount_rate)/100,
+        });
 
       const response = await axios.get(
         "/api/smr",
@@ -121,7 +135,8 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
             model_name: model_name,
             num_units: Number(num_units),
           },
-          withCredentials: false
+          withCredentials: false,
+          timeout: 10000
         }
       );
 
@@ -143,9 +158,20 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
 
       });
 
+      // Error Message
     } catch (err) {
-      console.error("SMR simulation error:", err);
-    }
+        console.error("SMR simulation error:", err);
+
+        let message = "The simulation server is currently unavailable.";
+
+        if (err.response?.data?.message) {
+          message = err.response.data.message; 
+        }
+        else if (err.code === "ECONNABORTED") {
+          message = "The simulation timed out. Please try again later.";
+        }
+        setApiError(message);
+      }
 
     setIsLoading(false);
   }, [
@@ -161,6 +187,7 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
   return (
     <div className="h-screen p-6 py-0 overflow-auto transition duration-500 ease-in-out bg-gray-200">
       {isLoading && <LoadingSpinnerMessage energy="SMR" />}
+      {apiError && <ErrorDisplayMessage message={apiError} />}
 
       <div className="w-[420px] mx-auto text-gray-900">
         <div className="flex justify-center">
@@ -192,7 +219,10 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
             <select
               className="mt-1 block w-2/3 p-2 border border-gray-700 rounded-3xl text-center bg-blue-500 text-white"
               value={model_name}
-              onChange={(e) => setModel_name(e.target.value)}
+              onChange={(e) => {
+                setApiError(null);
+                setModel_name(e.target.value)
+              }}
             >
               <option value="NUSCALE POWER MODULE">NuScale Power Module</option>
               <option value="HOLTEC">Holtec SMR-300</option>
@@ -208,7 +238,10 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
             type="number"
             min="1"
             step={1}
-            onChange={(e) => setNum_units(e.target.value)}
+            onChange={(e) => {
+              setApiError(null);
+              setNum_units(e.target.value)
+            }}
           />
         </section>
 
@@ -226,6 +259,7 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
             max="100"
             step={1}
             onChange={(e) => {
+              setApiError(null);
               const val = Number(e.target.value);
               if (val >= 0 && val <= 100) setDiscount_rate(e.target.value);
             }}
@@ -238,7 +272,10 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
             type="number"
             min="1"
             step={1}
-            onChange={(e) => setYears_of_modelling(e.target.value)}
+            onChange={(e) => {
+              setApiError(null);
+              setYears_of_modelling(e.target.value)
+            }}
           />
         </section>
 
