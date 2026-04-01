@@ -227,6 +227,7 @@ const SMREnergyPage = ({ setSMRCalcValues, setSMRInputValues }) => {
               <option value="NUSCALE POWER MODULE">NuScale Power Module</option>
               <option value="HOLTEC">Holtec SMR-300</option>
               <option value="HITACHI">GE-Hitachi BWRX-300</option>
+              <option value="RR SMR">Rolls-Royce SMR</option>
               {/* Add more SMR types here */}
             </select>
           </div>
