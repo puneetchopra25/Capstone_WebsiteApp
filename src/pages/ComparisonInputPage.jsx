@@ -113,18 +113,6 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
 
     try {
 
-<<<<<<< Updated upstream
-    // Whats being send to backend
-    console.log("Sending to backend:", {
-    latitude: coordinates.lat,
-    longitude: coordinates.lng,
-    target_demand_mw: target_demand_mw,
-    analysis_period: Number(analysis_period),
-    discount_rate: Number(rate)/100,
-    existing_capacity_mw: Number(existing_capacity_mw),
-    standby_lcoe_mwh: Number(standby_lcoe_mwh)
-    });
-=======
       // Fail Test: Queue Full
       // throw { response: { status: 429 } };
 
@@ -139,9 +127,8 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
         analysis_period: Number(analysis_period),
         discount_rate: Number(rate)/100,
         existing_capacity_mw: Number(existing_capacity_mw),
-        standby_lcoe_kwh: Number(standby_lcoe_kwh)
+        standby_lcoe_mwh: Number(standby_lcoe_mwh)
       });
->>>>>>> Stashed changes
   
       const response = await axios.get(
         "/api/recommend",
@@ -194,7 +181,6 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
 
     setIsLoading(false);
   }, [
-<<<<<<< Updated upstream
     coordinates,
     target_demand_mw,
     rate,
@@ -204,13 +190,6 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
     setComparisonCalcValues,
     setComparisonInputValues,
   ]);
-=======
-      coordinates,
-      target_demand_mw,
-      setComparisonCalcValues,
-      setComparisonInputValues,
-      ]);
->>>>>>> Stashed changes
 
   return (
     <div className="h-screen p-6 py-0 overflow-auto transition duration-500 ease-in-out bg-gray-200">
@@ -357,14 +336,10 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
             type="number"
             min="1"
             step="1"
-<<<<<<< Updated upstream
-            onChange={(e) => setstandby_lcoe_mwh(e.target.value)}
-=======
             onChange={(e) => {
               setApiError(null);
               setStandby_lcoe_kwh(e.target.value)
             }}
->>>>>>> Stashed changes
           />
           
         </section>
