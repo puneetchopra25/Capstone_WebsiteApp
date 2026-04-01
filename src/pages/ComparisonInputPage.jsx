@@ -151,6 +151,12 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
         }
       );
 
+      if (!response.data || response.data.length === 0) {
+        setApiError("No viable energy configurations found for this location. Try reducing demand or increasing standby capacity.");
+        setIsLoading(false);
+        return;
+      }
+
       // Log Backend results
       console.log("Backend response data:", response.data);
 
