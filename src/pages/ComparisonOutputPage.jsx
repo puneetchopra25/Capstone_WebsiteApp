@@ -165,7 +165,7 @@ const ComparisonOutputPage = ({ ComparisonCalcValues, ComparisonInputValues }) =
                     <span className="block font-semibold text-lg text-gray-800">
                       ${res.total_score_cost_millions?.toLocaleString(undefined, { 
                         maximumFractionDigits: 0 
-                      })}M
+                      })} M
                     </span>
                   </div>
 

@@ -188,11 +188,17 @@ const downloadPDF = async () => {
           <div className="px-6 py-4">
             <div className="mb-3">
               <span className="text-base font-medium text-gray-600">Annual Energy</span>
-              <span className="block font-semibold text-lg text-gray-800">{annual_energy_output?.toLocaleString() ?? "0"} MWh</span>
+              <span className="block font-semibold text-lg text-gray-800">
+                {annual_energy_output?.toLocaleString(undefined, { 
+                  maximumFractionDigits: 0 
+                })} MWh/yr</span>
             </div>
             <div className="mb-3">
               <span className="text-base font-medium text-gray-600">Average Monthly Generation</span>
-              <span className="block font-semibold text-lg text-gray-800">{maxGen?.toLocaleString() ?? "0"} MWh</span>
+              <span className="block font-semibold text-lg text-gray-800">
+                {maxGen?.toLocaleString(undefined, { 
+                  maximumFractionDigits: 0 
+                })} MWh/month</span>
             </div>
           </div>
         </div>
@@ -206,25 +212,33 @@ const downloadPDF = async () => {
             <div className="mb-3">
               <span className="text-base font-medium text-gray-600">Capital Cost:</span>
               <span className="block font-semibold text-lg text-gray-800">
-                {capital_cost?.toLocaleString() ?? "0"} M$
+                ${capital_cost?.toLocaleString(undefined, { 
+                  maximumFractionDigits: 0 
+                })} M
               </span>
             </div>
             <div className="mb-3">
               <span className="text-base font-medium text-gray-600">Annual Recurring Cost:</span>
               <span className="block font-semibold text-lg text-gray-800">
-                {annual_recurring_cost?.toLocaleString() ?? "0"} M$/yr
+                ${annual_recurring_cost?.toLocaleString(undefined, { 
+                  maximumFractionDigits: 0 
+                })} M/yr
                 </span>
             </div>
             <div className="mb-3">
               <span className="text-base font-medium text-gray-600">Net Present Value Cost:</span>
               <span className="block font-semibold text-lg text-gray-800">
-                {net_present_value_cost?.toLocaleString() ?? "0"} M$
+                ${net_present_value_cost?.toLocaleString(undefined, { 
+                  maximumFractionDigits: 0 
+                })} M
                 </span>
             </div>
             <div className="mb-3">
               <span className="text-base font-medium text-gray-600">Net Annual Cost:</span>
               <span className="block font-semibold text-lg text-gray-800">
-                {annual_cost?.toLocaleString() ?? "0"} M$/yr
+                ${annual_cost?.toLocaleString(undefined, { 
+                  maximumFractionDigits: 0 
+                })} M/yr
                 </span>
             </div>
             <div className="mb-3 relative group">
@@ -239,7 +253,7 @@ const downloadPDF = async () => {
                 </p>
               </div>
               <span className="block font-semibold text-lg text-gray-800">
-                {lcoe?.toLocaleString() ?? "0"} $/kWh
+                ${lcoe?.toLocaleString() ?? "0"}/kWh
               </span>
             </div>
           </div>
