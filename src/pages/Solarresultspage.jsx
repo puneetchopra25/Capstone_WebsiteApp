@@ -71,7 +71,7 @@ const SolarResultsPage = ({ solarCalcValues, solarPlotImage, cashflowPlotImage, 
         <div className="bg-white rounded-lg shadow-md overflow-hidden col-span-1">
           <div className="bg-gray-200 px-5 py-3">
             <h3 className="text-xl font-bold text-gray-800 text-center">
-              Solar Energy Results
+              Energy Results
             </h3>
           </div>
           <div className="px-6 py-4">
@@ -82,7 +82,9 @@ const SolarResultsPage = ({ solarCalcValues, solarPlotImage, cashflowPlotImage, 
                 Annual Energy Output
               </span>
               <span className="block font-semibold text-lg text-gray-800">
-                {annualEnergyOutput.toLocaleString()} MWh/yr
+                {annualEnergyOutput.toLocaleString(undefined, { 
+                        maximumFractionDigits: 0 
+                      })} MWh/yr
               </span>
             </div>
 
@@ -102,7 +104,7 @@ const SolarResultsPage = ({ solarCalcValues, solarPlotImage, cashflowPlotImage, 
                 LCOE
               </span>
               <span className="block font-semibold text-lg text-gray-800">
-                ${lcoe?.toFixed(3) || "0.000"} / kWh
+                ${lcoe?.toFixed(3) || "0.000"}/kWh
               </span>
             </div>
           </div>
@@ -112,7 +114,7 @@ const SolarResultsPage = ({ solarCalcValues, solarPlotImage, cashflowPlotImage, 
         <div className="bg-white rounded-lg shadow-md overflow-hidden col-span-1">
           <div className="bg-gray-200 px-5 py-3">
             <h3 className="text-xl font-bold text-gray-800 text-center">
-              Cost Details
+              Financial Results
             </h3>
           </div>
           <div className="px-6 py-4">
@@ -123,7 +125,7 @@ const SolarResultsPage = ({ solarCalcValues, solarPlotImage, cashflowPlotImage, 
                 Initial Cost:
               </span>
               <span className="block font-semibold text-lg text-gray-800">
-                ${initial_cost?.toLocaleString() || 0}
+                ${String(initial_cost).split('.')[0]}
               </span>
             </div>
 
@@ -133,7 +135,7 @@ const SolarResultsPage = ({ solarCalcValues, solarPlotImage, cashflowPlotImage, 
                 Annual Maintenance:
               </span>
               <span className="block font-semibold text-lg text-gray-800">
-                ${main_cost?.toLocaleString() || 0}
+              ${String(main_cost).split('.')[0]}
               </span>
             </div>
 
@@ -143,7 +145,9 @@ const SolarResultsPage = ({ solarCalcValues, solarPlotImage, cashflowPlotImage, 
                 Annual Revenue:
               </span>
               <span className="block font-semibold text-lg text-gray-800">
-                ${annualRevenue.toLocaleString()}
+                ${annualRevenue.toLocaleString(undefined, { 
+                        maximumFractionDigits: 0 
+                      })}
               </span>
             </div>
 
