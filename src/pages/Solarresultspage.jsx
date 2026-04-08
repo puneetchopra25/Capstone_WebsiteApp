@@ -79,7 +79,7 @@ const SolarResultsPage = ({ solarCalcValues, solarPlotImage, cashflowPlotImage, 
             {/* Annual Energy */}
             <div className="mb-3">
               <span className="text-base font-medium text-gray-600">
-                Annual Energy Output
+                Annual Energy Output:
               </span>
               <span className="block font-semibold text-lg text-gray-800">
                 {annualEnergyOutput.toLocaleString(undefined, { 
@@ -91,7 +91,7 @@ const SolarResultsPage = ({ solarCalcValues, solarPlotImage, cashflowPlotImage, 
             {/* Capacity Factor */}
             <div className="mb-3">
               <span className="text-base font-medium text-gray-600">
-                Capacity Factor
+                Capacity Factor:
               </span>
               <span className="block font-semibold text-lg text-gray-800">
                 {capacity_factor_solar || 0}%
@@ -101,7 +101,7 @@ const SolarResultsPage = ({ solarCalcValues, solarPlotImage, cashflowPlotImage, 
             {/* LCOE */}
             <div className="mb-3">
               <span className="text-base font-medium text-gray-600">
-                LCOE
+                LCOE:
               </span>
               <span className="block font-semibold text-lg text-gray-800">
                 ${lcoe?.toFixed(3) || "0.000"}/kWh

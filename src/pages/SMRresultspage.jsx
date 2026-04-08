@@ -187,14 +187,14 @@ const downloadPDF = async () => {
           </div>
           <div className="px-6 py-4">
             <div className="mb-3">
-              <span className="text-base font-medium text-gray-600">Annual Energy</span>
+              <span className="text-base font-medium text-gray-600">Annual Energy:</span>
               <span className="block font-semibold text-lg text-gray-800">
                 {annual_energy_output?.toLocaleString(undefined, { 
                   maximumFractionDigits: 0 
                 })} MWh/yr</span>
             </div>
             <div className="mb-3">
-              <span className="text-base font-medium text-gray-600">Average Monthly Generation</span>
+              <span className="text-base font-medium text-gray-600">Average Monthly Generation:</span>
               <span className="block font-semibold text-lg text-gray-800">
                 {maxGen?.toLocaleString(undefined, { 
                   maximumFractionDigits: 0 
