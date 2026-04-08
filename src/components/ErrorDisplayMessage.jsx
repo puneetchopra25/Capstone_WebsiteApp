@@ -16,7 +16,7 @@ export const ErrorDisplayMessage = ({ message }) => {
         <p className="mt-2 text-lg font-bold text-red-800 text-center px-4">
           Simulation Failed
         </p>
-        <p className="mt-4 text-lg font-medium text-gray-700 text-center">
+        <p className="mt-4 text-lg font-medium text-gray-700 text-center whitespace-pre-line">
           {message || "The server is currently unavailable. Please try again."}
         </p>
       </div>

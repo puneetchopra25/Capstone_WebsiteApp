@@ -152,7 +152,7 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
       );
 
       if (!response.data || response.data.length === 0) {
-        setApiError("No viable energy configurations found for this location. Try reducing demand or increasing standby capacity.");
+        setApiError("Small Modular Reactors are restricted in this area, and Solar Energy alone cannot meet the current energy demand.\nNo viable energy configurations found. Try reducing demand or increasing standby capacity");
         setIsLoading(false);
         return;
       }
