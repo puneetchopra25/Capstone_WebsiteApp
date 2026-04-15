@@ -152,7 +152,7 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
       );
 
       if (!response.data || response.data.length === 0) {
-        setApiError("Small Modular Reactors are restricted in this area, and Solar Energy alone cannot meet the current energy demand.\nNo viable energy configurations found. Try reducing demand or increasing standby capacity");
+        setApiError("Small Modular Reactors are restricted in this area, \nand Solar Energy alone cannot meet the current energy demand.\nNo viable energy configurations found. \nTry reducing demand or increasing standby capacity");
         setIsLoading(false);
         return;
       }
@@ -324,7 +324,7 @@ const ComparisonInputPage = ({ setComparisonCalcValues, setComparisonInputValues
           <SectionTitle title="Standby Generation" />
 
           <InputWithLabel
-            label="Spare Standby Capacity (MWh)"
+            label="Spare Standby Capacity (MW)"
             id="existing_capacity_mw"
             value={existing_capacity_mw}
             type="number"

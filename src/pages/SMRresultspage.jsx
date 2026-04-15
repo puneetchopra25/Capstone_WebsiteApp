@@ -266,6 +266,10 @@ const downloadPDF = async () => {
           </div>
           <div className="px-6 py-4">
             <div className="mb-3">
+              <span className="text-base font-medium text-gray-600">SMR Configuration:</span>
+              <span className="block font-semibold text-lg text-gray-800">{SMRInputValues?.num_units}x {SMRInputValues?.model_name} </span>
+            </div>
+            <div className="mb-3">
               <span className="text-base font-medium text-gray-600">Unit Power:</span>
               <span className="block font-semibold text-lg text-gray-800">{unit_power} MW</span>
             </div>
